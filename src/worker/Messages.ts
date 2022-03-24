@@ -1,21 +1,24 @@
 import SimConfig from 'sim/SimConfig';
-import { Stats } from 'util/calculateStats';
-import WorkerCommand from './WorkerCommand';
+import { Stats } from 'sim/Stats';
 
 export interface ConfigureMessage {
-  command: WorkerCommand.Configure;
+  command: 'configure';
   expression: string;
   config: SimConfig;
 }
 
 export interface RunMessage {
-  command: WorkerCommand.Run;
+  command: 'run';
   iterations: number;
 }
 
+export interface StopMessage {
+  command: 'stop';
+}
+
 export interface CompleteMessage {
-  command: WorkerCommand.Complete;
+  command: 'complete';
   stats: Stats;
 }
 
-export type ToWorkerMessages = ConfigureMessage | RunMessage;
+export type ToWorkerMessages = ConfigureMessage | RunMessage | StopMessage;
