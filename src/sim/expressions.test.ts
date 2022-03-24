@@ -1,4 +1,4 @@
-import calculateStats from 'util/calculateStats';
+import calculateStats from 'sim/Stats';
 import mulberry32 from 'util/mulberry32';
 import Expression from './Expression';
 import { exportedForTesting } from './expressions';
@@ -192,36 +192,31 @@ describe('attack', () => {
     expect(testFixedRngExpr(10, '10=atk>10', { ac: 20 })).toEqual(10);
   });
   it('resolves to 0 when the first expression is less than the AC', () => {
-    expect(testFixedRngExpr(4, '5=atk>10')).toEqual(10);
-    expect(testFixedRngExpr(10, '10=atk>10', { ac: 20 })).toEqual(10);
+    expect(testFixedRngExpr(4, '5=atk>10')).toEqual(0);
+    expect(testFixedRngExpr(9, '10=atk>10', { ac: 20 })).toEqual(0);
   });
   it('resolves the attack on a nat 20 regardless of total vs AC', () => {
     expect(testFixedRngExpr(20, '5=atk>10')).toEqual(10);
     expect(testFixedRngExpr(20, '3=atk>10', { ac: 25 })).toEqual(10);
     expect(testFixedRngExpr(20, '1=atk>10', { ac: 30 })).toEqual(10);
   });
-  // it('resolves to 0 when on a nat 1 regardless of total vs AC', () => { // TODO: Fix this case!
-  //   expect(testFixedRngExpr(1, '5=atk>10')).toEqual(0);
-  //   expect(testFixedRngExpr(1, '9=atk>10')).toEqual(0);
-  //   expect(testFixedRngExpr(1, '20=atk>10', { ac: 1 })).toEqual(0);
-  // });
-
-
-
-
-  
+  it.skip('resolves to 0 when on a nat 1 regardless of total vs AC', () => { // TODO: Fix this case!
+    expect(testFixedRngExpr(1, '5=atk>10')).toEqual(0);
+    expect(testFixedRngExpr(1, '9=atk>10')).toEqual(0);
+    expect(testFixedRngExpr(1, '20=atk>10', { ac: 1 })).toEqual(0);
+  });
 });
 
 describe('save', () => {
-  it('resolves to second expr when the (first expr + 8) is less than (dice roll + save mod)', () => {
+  it('resolves to second expr when the (dice roll + save mod) is < (first expr)', () => {
     expect(testFixedRngExpr(4, '5=sav:50>10')).toEqual(10);
-    expect(testFixedRngExpr(10, '6=sav:50>10', { sm: 5 })).toEqual(10);
+    expect(testFixedRngExpr(10, '16=sav:50>10', { sm: 5 })).toEqual(10);
   });
-  it('resolves to 0 when the (first expr + 8) is less than (dice roll + save mod) and result modifier is 0(%)', () => {
-    expect(testFixedRngExpr(4, '5=sav:0>10')).toEqual(0);
-    expect(testFixedRngExpr(10, '5=sav:0>10', { sm: 20 })).toEqual(0);
+  it('resolves to 0 when the (dice roll + save mod) is >= (first expr) and result modifier is 0(%)', () => {
+    expect(testFixedRngExpr(8, '5=sav:0>10')).toEqual(0);
+    expect(testFixedRngExpr(10, '25=sav:0>10', { sm: 20 })).toEqual(0);
   });
-  it('resolves to half (round down) when the (first expr + 8) is less than (dice roll + save mod) and result modifier is 50(%)', () => {
+  it('resolves to half (round down) when the (dice roll + save mod) is >= (first expr) and result modifier is 50(%)', () => {
     expect(testFixedRngExpr(5, '5=sav:50>10')).toEqual(5);
     expect(testFixedRngExpr(10, '15=sav:50>11', { sm: 5 })).toEqual(5);
   });
@@ -312,9 +307,9 @@ describe('div', () => {
 });
 
 describe('repeat', () => {
-
+  // TODO
 });
 
 describe('reroll_lte', () => {
-
+  // TODO
 });

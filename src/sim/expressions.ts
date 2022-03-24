@@ -69,17 +69,18 @@ export const SplitExpressions = [
     }
   ),
   splitExpr('save', /=sav:(\d+)(?::(adv|dis))?>/, 2,
-    (m) => ({ failmod: (Number(m[1]) / 100.0) || 0.5, vantage: m[2] }),
+    (m) => ({ successmod: (Number(m[1]) / 100.0) ?? 0.5, vantage: m[2] }),
     (state, ctx) => {
       let droll = roll(20);
-      if (ctx.props.vantage === 'adv')
-        droll = Math.max(droll, roll(20))
-      else if (ctx.props.vantage === 'dis')
-        droll = Math.min(droll, roll(20))
+      if (ctx.props.vantage === 'adv') {
+        droll = Math.max(droll, roll(20));
+      } else if (ctx.props.vantage === 'dis') {
+        droll = Math.min(droll, roll(20));
+      }
 
       const dmg = ctx.subExpressions[1].eval(state)
       if (droll + state.sm >= ctx.subExpressions[0].eval(state)) {
-        return Math.floor(dmg * ctx.props.failmod);
+        return Math.floor(dmg * ctx.props.successmod);
       }
       return dmg;
     }
