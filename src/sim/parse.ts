@@ -73,6 +73,9 @@ export function parseSimExpr(rawExpr: string): Expression {
 
 export function parseSimDef(simDef: string): Simulation[] {
   const [nameLevel, expr] = simDef.split(/:(.*)/);
+  if (!expr) {
+    throw new Error(`Simulation definition "${simDef}" is not correctly formatted.`)
+  }
   let levels = [0];
   let name = nameLevel;
   if (nameLevel.includes('@')) {
@@ -80,30 +83,42 @@ export function parseSimDef(simDef: string): Simulation[] {
     name = namePart;
     levels = parseRanges([levelsPart]);
   }
+  let expression: Expression<unknown>;
+  let error: string | undefined;
+  const rawExpr = expr.replace(/ /g, '');
+  try {
+    expression = parseSimExpr(rawExpr);
+  } catch (e) {
+    expression = parseSimExpr('0');
+    error = String(e);
+  }
   return levels.map((level) => {
-    const rawExpr = expr.replace(/ /g, '');
-    return new Simulation(name, level, simDef, rawExpr, parseSimExpr(rawExpr));
+    const sim = new Simulation(name, level, simDef, rawExpr, expression);
+    sim.error = error;
+    return sim;
   });
 }
 
-export function parseTestSimDef(simDef: string): Simulation[] {
+export function tryParseTestSimDef(simDef: string): Simulation[] {
   const sims = parseSimDef(simDef);
   sims.forEach((sim) => {
-    // Perform a test run, to make sure it's all good!
-    sim.run(new SimState({ ac: 10, pb: 2, level: 1, sm: 0 }));
+    if (!sim.error) {
+      try {
+        // Perform a test run, to make sure it's all good!
+        sim.run(new SimState({ ac: 10, pb: 2, level: 1, sm: 0 }));
+      } catch (e) {
+        sim.error = String(e);
+      }
+    }
   });
   return sims;
 }
 
-export function tryParseTestSimDef(simDef: string): Simulation[] {
-  try {
-    return parseTestSimDef(simDef);
-  } catch (e) {
-    log.info(`Failed to parse simulation definition "${simDef}": ${e}`, e);
-    return [];
+export function parseTestSimDef(simDef: string): Simulation[] {
+  const sims = tryParseTestSimDef(simDef);
+  const firstError = sims.find((s) => s.error)?.error;
+  if (firstError) {
+    throw new Error(firstError);
   }
-}
-
-function tryParseSims(simDefs: string[]): Simulation[] {
-  return simDefs.map(tryParseTestSimDef).flat();
+  return sims;
 }
