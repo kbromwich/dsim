@@ -1,7 +1,7 @@
 import Expression from './Expression';
-import SimConfig from './SimConfig';
+import SimParams from './SimParams';
 
-class SimState implements SimConfig {
+class SimState implements SimParams {
   // Static state
   readonly ac: number;
   readonly level: number;
@@ -13,7 +13,7 @@ class SimState implements SimConfig {
   readonly funcReg: Map<string, Expression>;
   readonly varReg: Map<string, number>;
 
-  constructor(config: SimConfig) {
+  constructor(config: SimParams) {
     this.ac = config.ac;
     this.sm = config.sm;
     this.pb = config.pb;

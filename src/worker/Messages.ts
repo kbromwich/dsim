@@ -1,10 +1,10 @@
-import SimConfig from 'sim/SimConfig';
+import SimParams from 'sim/SimParams';
 import { Stats } from 'sim/Stats';
 
 export interface ConfigureMessage {
   command: 'configure';
   expression: string;
-  config: SimConfig;
+  config: SimParams;
 }
 
 export interface RunMessage {

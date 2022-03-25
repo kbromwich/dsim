@@ -7,11 +7,22 @@ import Tab from '@mui/material/Tab';
 
 import SimList from './SimList';
 import SimRunner from './SimRunner';
+import SimConfiguration from './SimConfiguration';
+import SimConfig from 'sim/SimConfig';
+import { tryParseRanges } from 'util/parseRanges';
+import iterationScale from 'util/iterationScale';
 
 export default function App() {
   const [selectedTab, setSelectedTab] = React.useState(0);
   const [allSims, setAllSimsState] = React.useState(JSON.parse(localStorage.getItem('allSims') || '[]'));
   const [selectedSims, setSelectedSimsState] = React.useState(JSON.parse(localStorage.getItem('selectedSims') || '[]'));
+  const lsConf: Partial<SimConfig> = JSON.parse(localStorage.getItem('config') || '{}');
+  const [config, setConfigState] = React.useState<SimConfig>({
+    acValues: (tryParseRanges(lsConf.acValues || '') && lsConf.acValues) || '12,15,18',
+    iterations: lsConf.iterations ?? 3,
+    levels: (tryParseRanges(lsConf.levels || '') && lsConf.levels) || '1-20',
+  });
+
   const setAllSims = (sims: string[]) => {
     setAllSimsState(sims);
     localStorage.setItem('allSims', JSON.stringify(sims));
@@ -20,6 +31,11 @@ export default function App() {
     setSelectedSimsState(simNames);
     localStorage.setItem('selectedSims', JSON.stringify(simNames));
   };
+  const setConfig = (newConfig: SimConfig) => {
+    setConfigState(newConfig);
+    localStorage.setItem('config', JSON.stringify(newConfig));
+  };
+
   return (
     <Container maxWidth="lg">
       <Container maxWidth="sm">
@@ -44,11 +60,12 @@ export default function App() {
         />
       </div>
       <div hidden={selectedTab !== 1}>
-        {/* <SimRunner sims={selectedSims} /> */}
+        <SimConfiguration config={config} onChange={setConfig} />
         <SimRunner
           rawSimDefs={allSims}
-          iterations={1000000}
-          acValues={[14, 16, 18]}
+          iterations={iterationScale(config.iterations)}
+          levels={tryParseRanges(config.levels) || []}
+          acValues={tryParseRanges(config.acValues) || []}
         />
       </div>
     </Container>

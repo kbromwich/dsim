@@ -3,21 +3,23 @@ import throttle from 'lodash.throttle';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import { Typography } from '@mui/material';
 
-import WorkerPool from 'worker/WorkerPool';
 import { combineStats } from 'sim/Stats';
 import { tryParseTestSimDef } from 'sim/parse';
+import { createSimParams } from 'sim/SimParams';
 import SimResult from 'sim/SimResult';
-import { createSimConfig } from 'sim/SimConfig';
+import cleanSimsText from 'util/cleanSimsText';
+import WorkerPool from 'worker/WorkerPool';
+
 import SimResultsTable from './SimResultsTable';
 import SimRun, { SimProgress } from './SimRun';
 import Timer from './Timer';
-import { Typography } from '@mui/material';
-import cleanSimsText from 'util/cleanSimsText';
 
 interface Props {
   acValues: number[];
   iterations: number;
+  levels: number[];
   rawSimDefs: string[];
 }
 
@@ -30,7 +32,7 @@ interface State {
   iterations: number;
 }
 
-const SimList: React.FC<Props> = ({ acValues, iterations, rawSimDefs }) => {
+const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) => {
   const [state, setState] = React.useState<State>({
     status: 'init',
     onStop: undefined,
@@ -60,9 +62,11 @@ const SimList: React.FC<Props> = ({ acValues, iterations, rawSimDefs }) => {
     const parseErrors: string[] = [];
     const runs: SimRun[] = cleanSimsText(rawSimDefs).map((rawSimDef): SimRun[] => {
       try {
-        return tryParseTestSimDef(rawSimDef).map((sim) => acValues.map((ac) => ({
+        const sims = tryParseTestSimDef(rawSimDef)
+          .filter((s) => levels.includes(s.level));
+        return sims.map((sim) => acValues.map((ac) => ({
           simulation: sim,
-          simConfig: createSimConfig(sim.level, ac),
+          simParams: createSimParams(sim.level, ac),
           maxProgress: 0,
           minProgress: 0,
           updateCount: 0,
@@ -84,7 +88,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, rawSimDefs }) => {
       try {
         const workerConfig = {
           expression: run.simulation.rawExpression,
-          config: run.simConfig,
+          config: run.simParams,
         };
         const onProgress = throttle((max: number, min: number) => {
           if ('maxProgress' in run) {
@@ -95,7 +99,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, rawSimDefs }) => {
           }
         }, 20, { leading: true });
         const result = await pool.run(workerConfig, iterations, onProgress);
-        runs[i] = new SimResult(run.simulation, run.simConfig, combineStats(result));
+        runs[i] = new SimResult(run.simulation, run.simParams, combineStats(result));
       } catch (e) {
         run.error = String(e);
         if (run.error === 'Terminated') {
@@ -118,6 +122,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, rawSimDefs }) => {
     <Box sx={{ flexBasis: '64%', flex: 1, padding: 1 }}>
       <Button
         color="primary"
+        disabled={!levels.length || !acValues.length || !iterations}
         onClick={isRunning ? state.onStop : runSims}
       >
         {!isRunning && 'Run Simulation!'}

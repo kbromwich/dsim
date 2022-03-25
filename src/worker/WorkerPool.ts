@@ -1,4 +1,4 @@
-import SimConfig from 'sim/SimConfig';
+import SimParams from 'sim/SimParams';
 import { Stats } from 'sim/Stats';
 import { range } from 'util/range';
 import { CompleteMessage, ToWorkerMessages } from './Messages';
@@ -9,7 +9,7 @@ const postMessage = (worker: Worker, message: ToWorkerMessages) => {
 
 interface WorkerConfig {
   expression: string;
-  config: SimConfig;
+  config: SimParams;
 }
 
 class WorkerPool {

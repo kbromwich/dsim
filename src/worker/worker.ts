@@ -1,5 +1,5 @@
 import { parseSimExpr } from 'sim/parse';
-import SimConfig from 'sim/SimConfig';
+import SimParams from 'sim/SimParams';
 import SimState from 'sim/SimState';
 import { BaseSimulation } from 'sim/Simulation';
 import calculateStats from 'sim/Stats';
@@ -9,14 +9,14 @@ import { ToWorkerMessages } from './Messages';
 // state isn't actually very global; each worker will have their own copy of
 // the below state
 let simulation: BaseSimulation | undefined;
-let simConfig: SimConfig | undefined;
+let simParams: SimParams | undefined;
 
 onmessage = function(event: MessageEvent<ToWorkerMessages>) {
   const { data } = event;
   if (data.command === 'configure') {
     const { expression, config } = data;
     simulation = new BaseSimulation(expression, parseSimExpr(expression));
-    simConfig = config;
+    simParams = config;
   } else if (data.command === 'run') {
     const { iterations } = data;
     const stats = runSims(iterations);
@@ -25,9 +25,9 @@ onmessage = function(event: MessageEvent<ToWorkerMessages>) {
 }
 
 function runSims(iterations: number) {
-  if (!simulation || !simConfig) throw new Error('Worker is not configured!');
+  if (!simulation || !simParams) throw new Error('Worker is not configured!');
   const results: number[] = [];
-  const state = new SimState(simConfig);
+  const state = new SimState(simParams);
   for (let i = 0; i < iterations; i++) {
     state.reset();
     results.push(simulation.run(state));

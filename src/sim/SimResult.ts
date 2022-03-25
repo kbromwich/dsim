@@ -1,15 +1,15 @@
-import SimConfig from './SimConfig';
+import SimParams from './SimParams';
 import Simulation from './Simulation';
 import { Stats } from './Stats';
 
 class SimResult {
   simulation: Simulation;
-  simConfig: SimConfig;
+  simParams: SimParams;
   stats: Stats;
 
-  constructor(simulation: Simulation, simConfig: SimConfig, stats: Stats) {
+  constructor(simulation: Simulation, simParams: SimParams, stats: Stats) {
     this.simulation = simulation;
-    this.simConfig = simConfig;
+    this.simParams = simParams;
     this.stats = stats;
   }
 }

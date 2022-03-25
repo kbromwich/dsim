@@ -78,7 +78,7 @@ const SimResultRow: React.FC<Props> = ({ sims, acValues, showAverage, showExpres
         {sims[0].simulation.level}
       </StyledTableCell>
       {acValues.map((ac) => {
-        const sim = sims.find((s) => s.simConfig.ac === ac);
+        const sim = sims.find((s) => s.simParams.ac === ac);
         if (sim) {
           if ('stats' in sim) {
             return <StatsCell key={`${ac}-stats`} stats={sim.stats} />
