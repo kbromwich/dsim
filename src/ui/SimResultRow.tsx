@@ -131,6 +131,7 @@ const MemoSimResultRow: React.FC<Props> = (props) => {
     countRef.current += 1;
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => <SimResultRow {...props} />, [countRef.current]);
 };
 

@@ -1,4 +1,3 @@
-import log from 'util/log';
 import parseRanges from 'util/parseRanges';
 import Expression from './Expression';
 import { SplitExpressions, ValueExpressions } from './expressions';
