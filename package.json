@@ -1,7 +1,7 @@
 {
   "name": "dsim",
   "version": "0.1.0",
-  "homepage": "https://akronat.github.io/dnd-dpr-sim-webapp/",
+  "homepage": "https://akronat.github.io/dsim/",
   "private": true,
   "scripts": {
     "start": "react-scripts start",
