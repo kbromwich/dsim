@@ -21,6 +21,7 @@ export default function App() {
     acValues: (tryParseRanges(lsConf.acValues || '') && lsConf.acValues) || '12,15,18',
     iterations: lsConf.iterations ?? 3,
     levels: (tryParseRanges(lsConf.levels || '') && lsConf.levels) || '1-20',
+    workers: navigator.hardwareConcurrency,
   });
 
   const setAllSims = (sims: string[]) => {
@@ -62,10 +63,11 @@ export default function App() {
       <div hidden={selectedTab !== 1}>
         <SimConfiguration config={config} onChange={setConfig} />
         <SimRunner
-          rawSimDefs={allSims}
+          acValues={tryParseRanges(config.acValues) || []}
           iterations={iterationScale(config.iterations)}
           levels={tryParseRanges(config.levels) || []}
-          acValues={tryParseRanges(config.acValues) || []}
+          rawSimDefs={allSims}
+          workers={config.workers}
         />
       </div>
     </Container>

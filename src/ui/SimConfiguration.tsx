@@ -16,7 +16,7 @@ interface Props {
 const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
   return (
     <Box sx={{ paddingTop: 1, display: 'flex', justifyContent: 'space-around' }}>
-      <Box sx={{ flexBasis: '30%' }}>
+      <Box sx={{ flexBasis: '20%' }}>
         <Typography>Iterations</Typography>
         <Slider
           marks={[
@@ -30,7 +30,6 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
           scale={iterationScale}
           size="small"
           step={1}
-          sx={{ flexBasis: '33%' }}
           valueLabelDisplay="auto"
           value={config.iterations}
           onChange={(e, value) => onChange({ ...config, iterations: value as number })}
@@ -48,6 +47,23 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
         value={config.acValues}
         onChange={(e) => onChange({ ...config, acValues: e.target.value })}
       />
+      <Box sx={{ flexBasis: '20%' }}>
+        <Typography>Worker Threads</Typography>
+        <Slider
+          marks={[
+            { label: 'Single', value: 1 },
+            { label: 'Half', value: Math.floor(navigator.hardwareConcurrency / 2) },
+            { label: 'All', value: navigator.hardwareConcurrency },
+          ]}
+          max={navigator.hardwareConcurrency}
+          min={1}
+          size="small"
+          step={1}
+          valueLabelDisplay="auto"
+          value={config.workers}
+          onChange={(e, value) => onChange({ ...config, workers: value as number })}
+        />
+      </Box>
     </Box>
   );
 };

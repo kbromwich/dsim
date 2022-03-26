@@ -21,6 +21,7 @@ interface Props {
   iterations: number;
   levels: number[];
   rawSimDefs: string[];
+  workers: number;
 }
 
 interface State {
@@ -33,7 +34,7 @@ interface State {
   acValues: number[];
 }
 
-const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) => {
+const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs, workers }) => {
   const [state, setState] = React.useState<State>({
     status: 'init',
     onStop: undefined,
@@ -53,7 +54,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) 
 
   const runSims = async () => {
     const startTime = +new Date();
-    const pool = new WorkerPool(8);
+    const pool = new WorkerPool(workers);
     setSomeState({
       status: 'running',
       time: startTime,
