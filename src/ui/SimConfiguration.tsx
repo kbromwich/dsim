@@ -20,21 +20,18 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
         <Typography>Iterations</Typography>
         <Slider
           marks={[
-            { label: '1', value: 0 },
-            { label: '10', value: 1 },
-            { label: '100', value: 2 },
-            { label: '1K', value: 3 },
-            { label: '10K', value: 4 },
-            { label: '100K', value: 5 },
-            { label: '1M', value: 6 },
+            { label: 'Very Fast', value: 3 },
+            { label: 'Fast', value: 4 },
+            { label: 'Balanced', value: 5 },
+            { label: 'Accurate', value: 6 },
           ]}
           max={6}
-          min={0}
+          min={3}
           scale={iterationScale}
           size="small"
-          step={0.1}
+          step={1}
           sx={{ flexBasis: '33%' }}
-          valueLabelDisplay="on"
+          valueLabelDisplay="auto"
           value={config.iterations}
           onChange={(e, value) => onChange({ ...config, iterations: value as number })}
         />
