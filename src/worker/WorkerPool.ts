@@ -27,7 +27,7 @@ class WorkerPool {
   }
 
   run(config: WorkerConfig, iterations: number, onProgress?: (maxPercDone: number, minPercDone: number) => void): Promise<Stats[]> {
-    if (this.working.size) { 
+    if (this.working.size) {
       throw new Error('A previous run has not yet finished!');
     }
     return new Promise((res, rej) => {

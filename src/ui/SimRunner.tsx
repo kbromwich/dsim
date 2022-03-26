@@ -30,6 +30,7 @@ interface State {
   results: SimRun[];
   errors: string[];
   iterations: number;
+  acValues: number[];
 }
 
 const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) => {
@@ -40,6 +41,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) 
     results: [],
     errors: [],
     iterations,
+    acValues,
   });
   const stateRef = React.useRef<{ state: State; setState: typeof setState }>();
   stateRef.current = { state, setState };
@@ -57,6 +59,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) 
       time: startTime,
       onStop: () => pool.terminate(),
       iterations,
+      acValues
     });
     
     const parseErrors: string[] = [];
@@ -143,7 +146,7 @@ const SimList: React.FC<Props> = ({ acValues, iterations, levels, rawSimDefs }) 
             </Typography>
           )}
           {state.errors.map((error) => <Typography key={error}>{error}</Typography>)}
-          <SimResultsTable results={state.results} acValues={acValues} />
+          <SimResultsTable results={state.results} acValues={state.acValues} />
         </>
       )}
     </Box>
