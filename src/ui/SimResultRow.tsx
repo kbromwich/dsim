@@ -6,11 +6,11 @@ import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 
 import SimRun, { SimProgress } from './SimRun';
-import { combineStats, Stats } from 'sim/Stats';
-import SimResult from 'sim/SimResult';
+import { Stats } from 'sim/Stats';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(0.5),
+  border: 0,
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
   },
@@ -38,9 +38,10 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:nth-of-type(odd)': {
     backgroundColor: theme.palette.action.hover,
   },
-  // hide last border
-  '&:last-child td, &:last-child th': {
-    borderBottom: 0,
+  border: 0,
+  borderBottom: 0,
+  '&.topDivider': {
+    borderTop: '2px solid rgba(224, 224, 224, 1)',
   },
 }));
 
@@ -62,15 +63,14 @@ const StatsCell = ({ stats }: { stats: Stats }) => (
 );
 
 interface Props {
-  sims: SimRun[];
   acValues: number[];
+  sims: SimRun[];
   showExpressions?: boolean;
-  showAverage?: boolean;
+  topDivider?: boolean;
 }
-const SimResultRow: React.FC<Props> = ({ sims, acValues, showAverage, showExpressions }) => {
-  const allStatsReady = sims.every((s) => 'stats' in s);
+const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, topDivider }) => {
   return (
-    <StyledTableRow key={sims[0].simulation.id()}>
+    <StyledTableRow className={topDivider ? 'topDivider' : undefined}  key={sims[0].simulation.id()}>
       <StyledTableCell className="name">
         {sims[0].simulation.name}
       </StyledTableCell>
@@ -102,11 +102,6 @@ const SimResultRow: React.FC<Props> = ({ sims, acValues, showAverage, showExpres
         }
         return <StyledTableCell colSpan={2} key={`${ac}-empty`} />;
       })}
-      {showAverage && allStatsReady ? (
-        <StatsCell stats={combineStats((sims as SimResult[]).map((s) => s.stats))} />
-      ) : (
-        <StyledTableCell colSpan={2} />
-      )}
       {showExpressions && (
         <StyledTableCell className="expression">{sims[0].simulation.rawExpression}</StyledTableCell>
       )}
@@ -114,25 +109,31 @@ const SimResultRow: React.FC<Props> = ({ sims, acValues, showAverage, showExpres
   );
 };
 
-const MemoSimResultRow: React.FC<Props> = (props) => {
-  const countsRef = React.useRef(props.acValues.map(() => 0));
-  const countRef = React.useRef(0);
+interface MemoProps extends Props {
+  fastRender?: boolean;
+}
+
+const MemoSimResultRow: React.FC<MemoProps> = (props) => {
+  const { acValues, fastRender, sims } = props;
+  const timesRef = React.useRef(acValues.map(() => 0));
+  const timeRef = React.useRef(0);
 
   let rerender = false;
-  for (let i = 0; i < props.acValues.length; i += 1) {
-    const prevCount = countsRef.current[i] || 0;
-    const nextCount = (props.sims[i] as Partial<SimProgress>)?.updateCount || 0;
-    if (prevCount !== nextCount) {
-      countsRef.current[i] = nextCount;
+  for (let i = 0; i < acValues.length; i += 1) {
+    const prevTime = timesRef.current[i] || 0;
+    const nextTime = (sims[i] as Partial<SimProgress>)?.updateTime || 0;
+    if (prevTime !== nextTime) {
+      timesRef.current[i] = nextTime;
       rerender = true;
     }
   }
   if (rerender) {
-    countRef.current += 1;
+    timeRef.current += 1;
   }
 
+  const reRender = fastRender ? timeRef.current : +new Date();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => <SimResultRow {...props} />, [countRef.current]);
+  return useMemo(() => <SimResultRow {...props} />, [reRender]);
 };
 
 export default MemoSimResultRow;

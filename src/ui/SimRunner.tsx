@@ -85,7 +85,7 @@ const SimList: React.FC<Props> = ({ rawAcValues, iterations, rawLevels, rawSimDe
           simParams: createSimParams(sim.level, ac),
           maxProgress: 0,
           minProgress: 0,
-          updateCount: 0,
+          updateTime: 0,
           error: sim.error,
         }))).flat();
       } catch (e) {
@@ -110,10 +110,10 @@ const SimList: React.FC<Props> = ({ rawAcValues, iterations, rawLevels, rawSimDe
           if ('maxProgress' in run) {
             run.maxProgress = max;
             run.minProgress = min;
-            run.updateCount += 1;
+            run.updateTime = +new Date();
             setSomeState({ results: runs });
           }
-        }, 20, { leading: true });
+        }, 30, { leading: true });
         const result = await pool.run(workerConfig, iterations, onProgress);
         runs[i] = new SimResult(run.simulation, run.simParams, combineStats(result));
       } catch (e) {
@@ -170,7 +170,12 @@ const SimList: React.FC<Props> = ({ rawAcValues, iterations, rawLevels, rawSimDe
             </Typography>
           )}
           {runState.errors.map((error) => <Typography key={error}>{error}</Typography>)}
-          <SimResultsTable results={runState.results} acValues={runState.acValues} />
+          <SimResultsTable
+            acValues={runState.acValues}
+            results={runState.results}
+            fastRender={isRunning}
+            showExpressions
+          />
         </>
       )}
     </Box>

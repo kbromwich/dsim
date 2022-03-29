@@ -8,7 +8,7 @@ export interface SimProgress {
   maxProgress: number;
   minProgress: number;
   error?: string;
-  updateCount: number;
+  updateTime: number;
 }
 
 type SimRun = SimResult | SimProgress;
