@@ -1,9 +1,9 @@
 import { range } from './range';
 
-const parseIntStrict = (value: any): number => {
+const parsePositiveIntStrict = (value: string): number => {
   const num = Number(value);
   const parsedInt = parseInt(value, 10);
-  return num === parsedInt ? num : NaN;
+  return (num === parsedInt) && (num >= 0) ? num : NaN;
 };
 
 /** Parse strings such as "1-5,7,9,11-20" into a list of (integer) values */
@@ -12,9 +12,15 @@ export default function parseRanges(...ranges: (string|string[])[]) {
   ranges.flat().map((sr) => sr.split(',')).flat().forEach((rng) => {
     if (rng.includes("-")) {
       const [minlvl, maxlvl] = rng.split('-');
-      values.push(...range(parseIntStrict(minlvl), parseIntStrict(maxlvl) + 1));
+      const from = parsePositiveIntStrict(minlvl);
+      const to = parsePositiveIntStrict(maxlvl);
+      if (!Number.isNaN(from) && !Number.isNaN(to) && from <= to) {
+        values.push(...range(from, to + 1));
+      } else {
+        values.push(NaN);
+      }
     } else {
-      values.push(parseIntStrict(rng));
+      values.push(parsePositiveIntStrict(rng));
     }
   })
   return [...new Set(values)];
