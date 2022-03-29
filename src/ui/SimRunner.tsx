@@ -72,7 +72,6 @@ const SimList: React.FC<Props> = ({ rawAcValues, iterations, rawLevels, rawSimDe
       onStop: () => pool.terminate(),
       iterations,
       acValues,
-      compressedSimDefs: compressForUrl(rawSimDefs.join('\n')),
     });
     
     const parseErrors: string[] = [];
@@ -94,7 +93,12 @@ const SimList: React.FC<Props> = ({ rawAcValues, iterations, rawLevels, rawSimDe
         return [];
       }
     }).flat();
-    setSomeState({ errors: parseErrors });
+    setSomeState({
+      errors: parseErrors,
+      compressedSimDefs: compressForUrl([...new Set(
+        runs.map((r) => r.simulation.simDefinition)
+      )].join('\n')),
+    });
 
     for (let i = 0; i < runs.length; i += 1) {
       const run = runs[i] as SimProgress;
