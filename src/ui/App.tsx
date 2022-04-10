@@ -1,89 +1,151 @@
 import React from 'react';
 
+import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 
 import SimConfig from 'sim/SimConfig';
-import iterationScale from 'util/iterationScale';
 import parseSearchParams from 'util/parseSeachParams';
-
-import SimList from './SimList';
-import SimRunner from './SimRunner';
-import SimConfiguration from './SimConfiguration';
 import { decompressFromUrl } from 'util/compression';
+
+import { useEditorState } from './Editor/EditorState';
+import EditorSidebar from './Editor/EditorSidebar';
+import Editor from './Editor/Editor';
+import { useSelectorState } from './Selector/SelectorState';
+import ListSidebar from './Selector/SelectorSidebar';
+import Selector from './Selector/Selector';
+import { useRunnerState } from './Runner/RunnerState';
+import RunnerSidebar from './Runner/RunnerSidebar';
+import Runner from './Runner/Runner';
+
+
+const SideBar = styled('div')(({ theme }) => ({
+  width: 200,
+  textAlign: 'center',
+  backgroundColor: theme.palette.divider,
+}));
 
 export default function App() {
   const urlParams = parseSearchParams();
-  const urlSims = urlParams.sims && decompressFromUrl(urlParams.sims).split('\n');
+
+  const urlSims = urlParams.sims && decompressFromUrl(urlParams.sims);
+  const [allSims, setAllSimsState] = React.useState(urlSims ?? localStorage.getItem('sims') ?? '');
+  const [selectedSims, setSelectedSimsState] = React.useState(new Set(localStorage.getItem('selectedSims')?.split('\n') || []));
+
   const urlAcValues = urlParams.acValues && urlParams.acValues;
   const urlLevels = urlParams.levels && urlParams.levels;
-  const [selectedTab, setSelectedTab] = React.useState(0);
-  const [allSims, setAllSimsState] = React.useState<string[]>(urlSims || JSON.parse(localStorage.getItem('allSims') || '[]'));
-  const [selectedSims, setSelectedSimsState] = React.useState<string[]>(JSON.parse(localStorage.getItem('selectedSims') || '[]'));
   const lsConf: Partial<SimConfig> = JSON.parse(localStorage.getItem('config') || '{}');
   const [config, setConfigState] = React.useState<SimConfig>({
     acValues: urlAcValues || lsConf.acValues || '12,15,18',
     iterations: lsConf.iterations ?? 3,
     levels: urlLevels || lsConf.levels || '1-20',
-    workers: navigator.hardwareConcurrency,
+    workers: lsConf.workers || Math.ceil(navigator.hardwareConcurrency / 2),
   });
-  const linkSandboxMode = !!Object.keys(urlParams).length;
-  const saveSetting = (key: string, value: string) => !linkSandboxMode && localStorage.setItem(key, value);
+  
+  const sandboxMode = !!Object.keys(urlParams).length;
+  const saveSetting = (key: string, value: string) => !sandboxMode && localStorage.setItem(key, value);
+  const [tab, setTabState] = React.useState(sandboxMode ? 3 : Number(localStorage.getItem('tab') ?? 0));
 
-  const setAllSims = (sims: string[]) => {
+  const setAllSims = (sims: string) => {
     setAllSimsState(sims);
-    saveSetting('allSims', JSON.stringify(sims));
+    console.log('saving sims', sandboxMode, sims);
+    saveSetting('sims', sims);
   };
-  const setSelectedSims = (simNames: string[]) => {
+  const setSelectedSims = (simNames: Set<string>) => {
     setSelectedSimsState(simNames);
-    saveSetting('selectedSims', JSON.stringify(simNames));
+    saveSetting('selectedSims', [...simNames].join('\n'));
   };
   const setConfig = (newConfig: SimConfig) => {
     setConfigState(newConfig);
     saveSetting('config', JSON.stringify(newConfig));
   };
+  const setTab = (tab: number) => {
+    setTabState(tab);
+    saveSetting('tab', String(tab));
+  };
+
+  const editorStateSet = useEditorState(sandboxMode);
+  const editsInProgress = editorStateSet[0].editSims !== undefined;
+  const selectorStateSet = useSelectorState(allSims);
+  const runnerStateSet = useRunnerState(allSims);
 
   return (
-    <Container maxWidth="lg">
-      <Container maxWidth="sm">
+    <Box sx={{ display: 'flex', width: '100%' }}>
+      <SideBar>
         <Box sx={{ my: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
+          <Typography
+            component="h2"
+            fontFamily="serif"
+            fontWeight="bold"
+            gutterBottom
+            variant="h5"
+          >
             D&amp;D Damage Simulator
           </Typography>
-          {linkSandboxMode && (
+          {sandboxMode && (
             <Typography sx={{ fontStyle: 'italic' }} variant="body2">
               Linked-sandbox mode: changes will not be saved!
             </Typography>
           )}
         </Box>
-      </Container>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={selectedTab} onChange={(e, tab) => setSelectedTab(tab)}>
-          <Tab sx={{ width: '50%', maxWidth: '50%' }} label="Simulation Definitions" />
-          <Tab sx={{ width: '50%', maxWidth: '50%'  }} label="Simulation Runner" />
-        </Tabs>
+        <Box>
+          <Tabs value={tab} onChange={(e, tab) => setTab(tab)} orientation="vertical">
+            <Tab label="Introduction" />
+            <Tab label={editsInProgress ? 'Edit Sims*' : 'Edit Sims'} />
+            <Tab label="Select Sims" />
+            <Tab label="Run Sims" />
+          </Tabs>
+        </Box>
+
+        {tab === 1 && (
+          <EditorSidebar
+            onSimsChange={setAllSims}
+            sandboxMode={sandboxMode}
+            editStateSet={editorStateSet}
+          />
+        )}
+        {tab === 2 && (
+          <ListSidebar
+            selected={selectedSims}
+            onSelectedChange={setSelectedSims}
+            selectStateSet={selectorStateSet}
+          />
+        )}
+        {tab === 3 && (
+          <RunnerSidebar
+            rawSims={allSims}
+            selected={selectedSims}
+            config={config}
+            onConfigChange={setConfig}
+            runStateSet={runnerStateSet}
+          />
+        )}
+      </SideBar>
+      <Box sx={{ height: "100vh", width: '100%' }}>
+        {tab === 1 && (
+          <Editor
+            sims={allSims}
+            editStateSet={editorStateSet}
+          />
+        )}
+        {tab === 2 && (
+          <Selector
+            selected={selectedSims}
+            onSelectedChange={setSelectedSims}
+            selectStateSet={selectorStateSet}
+          />
+        )}
+        {tab === 3 && (
+          <Runner
+            config={config}
+            rawSims={allSims}
+            selected={selectedSims}
+            runStateSet={runnerStateSet}
+          />
+        )}
       </Box>
-      <div hidden={selectedTab !== 0}>
-        <SimList
-          sims={allSims}
-          selected={selectedSims}
-          setSims={setAllSims}
-          setSelected={setSelectedSims}
-        />
-      </div>
-      <div hidden={selectedTab !== 1}>
-        <SimConfiguration config={config} onChange={setConfig} />
-        <SimRunner
-          rawAcValues={config.acValues}
-          iterations={iterationScale(config.iterations)}
-          rawLevels={config.levels}
-          rawSimDefs={allSims}
-          workers={config.workers}
-        />
-      </div>
-    </Container>
+    </Box>
   );
 }

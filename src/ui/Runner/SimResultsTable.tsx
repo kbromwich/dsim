@@ -2,7 +2,6 @@ import React, { Fragment } from 'react';
 
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
-import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -100,7 +99,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
         const cmp = a[0].simulation.level - b[0].simulation.level;
         if (cmp !== 0) return cmp * ascMult;
       } else if (id.startsWith('ac')) {
-        const [_, acStr, stat] = id.split('.');
+        const [, acStr, stat] = id.split('.');
         const ac = Number(acStr);
         const statA = (a as SimResult[])
           .find((s) => s.simParams.ac === ac)
@@ -145,7 +144,10 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
   };
 
   return (
-    <TableContainer component={Paper}>
+    <TableContainer
+      // component={Paper}
+      sx={{ border: '1px solid rgba(224, 224, 224, 1)' }}
+    >
       <Table sx={{ minWidth: 700, borderCollapse: 'collapse' }}>
         <TableHead>
           <StyledTableRow>

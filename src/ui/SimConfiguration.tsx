@@ -13,55 +13,60 @@ interface Props {
   onChange: (config: SimConfig) => void;
 }
 
+const iterLabels = [
+  'Approx',
+  'Low',
+  'Medium',
+  'High',
+];
+
 const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
+  const { levels, iterations, workers, acValues } = config;
   return (
-    <Box sx={{ paddingTop: 1, display: 'flex', justifyContent: 'space-around' }}>
-      <Box sx={{ flexBasis: '20%' }}>
-        <Typography>Iterations</Typography>
+    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1, }}>
+      <TextField
+        error={!tryParseRanges(levels)}
+        label="Levels"
+        value={levels}
+        onChange={(e) => onChange({ ...config, levels: e.target.value })}
+        title="Levels to simulate. Comma separated, and can be ranges; e.g. &quot;1,2,3-5,8-10&quot;"
+      />
+      <TextField
+        error={!tryParseRanges(acValues)}
+        label="Armor Classes"
+        value={acValues}
+        onChange={(e) => onChange({ ...config, acValues: e.target.value })}
+        title="ACs to simulate. Comma separated, and can be ranges; e.g. &quot;10,12-15,18,20&quot;"
+      />
+      <Box sx={{ px: 1 }}>
+        <Typography title="Number of iterations to perform for each simulation">
+          Accuracy: {iterLabels[iterations - 3]}
+        </Typography>
         <Slider
-          marks={[
-            { label: 'Very Fast', value: 3 },
-            { label: 'Fast', value: 4 },
-            { label: 'Balanced', value: 5 },
-            { label: 'Accurate', value: 6 },
-          ]}
           max={6}
           min={3}
           scale={iterationScale}
           size="small"
           step={1}
           valueLabelDisplay="auto"
-          value={config.iterations}
+          value={iterations}
           onChange={(e, value) => onChange({ ...config, iterations: value as number })}
+          title="Number of iterations to perform for each simulation"
         />
       </Box>
-      <TextField
-        error={!tryParseRanges(config.levels)}
-        label="Levels"
-        value={config.levels}
-        onChange={(e) => onChange({ ...config, levels: e.target.value })}
-      />
-      <TextField
-        error={!tryParseRanges(config.acValues)}
-        label="ACs"
-        value={config.acValues}
-        onChange={(e) => onChange({ ...config, acValues: e.target.value })}
-      />
-      <Box sx={{ flexBasis: '20%' }}>
-        <Typography>Worker Threads</Typography>
+      <Box sx={{ px: 1 }}>
+        <Typography title="Number of worker threads to run simulations in parallel with">
+          Workers: {workers === navigator.hardwareConcurrency ? 'Max' : workers}
+        </Typography>
         <Slider
-          marks={[
-            { label: 'Single', value: 1 },
-            { label: 'Half', value: Math.floor(navigator.hardwareConcurrency / 2) },
-            { label: 'All', value: navigator.hardwareConcurrency },
-          ]}
           max={navigator.hardwareConcurrency}
           min={1}
           size="small"
           step={1}
           valueLabelDisplay="auto"
-          value={config.workers}
+          value={workers}
           onChange={(e, value) => onChange({ ...config, workers: value as number })}
+          title="Number of worker threads to run simulations in parallel with"
         />
       </Box>
     </Box>
