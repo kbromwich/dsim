@@ -19,6 +19,7 @@ import Selector from './Selector/Selector';
 import { useRunnerState } from './Runner/RunnerState';
 import RunnerSidebar from './Runner/RunnerSidebar';
 import Runner from './Runner/Runner';
+import Readme from './Readme';
 
 
 const SideBar = styled('div')(({ theme }) => ({
@@ -92,7 +93,7 @@ export default function App() {
         </Box>
         <Box>
           <Tabs value={tab} onChange={(e, tab) => setTab(tab)} orientation="vertical">
-            <Tab label="Introduction" />
+            <Tab label="About" />
             <Tab label={editsInProgress ? 'Edit Sims*' : 'Edit Sims'} />
             <Tab label="Select Sims" />
             <Tab label="Run Sims" />
@@ -124,6 +125,7 @@ export default function App() {
         )}
       </SideBar>
       <Box sx={{ height: "100vh", width: '100%' }}>
+        {tab === 0 && <Readme />}
         {tab === 1 && (
           <Editor
             sims={allSims}
