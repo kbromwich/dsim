@@ -37,8 +37,19 @@ function testRngExpr(rawExpr: string, runs: number, acc: number, stateOverride?:
   };
 }
 
-function testFixedRngExpr(d20Value: number, rawExpr: string, stateOverride?: Partial<SimState>) {
-  return Number(testRngExpr(rawExpr, 1, 99, stateOverride, () => (d20Value - 1) / 20).mean);
+function testFixedRngExpr(d20Value: number | number[], rawExpr: string, stateOverride?: Partial<SimState>) {
+  let counter = 0;
+  let rngFunc;
+  if (Array.isArray(d20Value)) {
+    rngFunc = () => {
+      const result = (d20Value[counter % d20Value.length] - 1) / 20;
+      counter += 1;
+      return result;
+    };
+  } else {
+    rngFunc = () => (d20Value - 1) / 20;
+  }
+  return Number(testRngExpr(rawExpr, 1, 99, stateOverride, rngFunc).mean);
 }
 
 // Value expressions
@@ -307,9 +318,17 @@ describe('div', () => {
 });
 
 describe('repeat', () => {
-  // TODO
+  it('repeats (and sums) the second expr a number of times equal the first expr', () => {
+    expect(testExpr('2#3')).toEqual(6);
+    expect(testFixedRngExpr([17, 7], '2#1d6')).toEqual(7);
+    expect(testFixedRngExpr([4, 20, 14, 7], '2#(5=atk>1D6+2)')).toEqual(8);
+  });
 });
 
 describe('reroll_lte', () => {
-  // TODO
+  it('reruns second expr if the result is less than the first expr', () => {
+    expect(testFixedRngExpr([6, 3], '1d20@rrlte:3')).toEqual(6);
+    expect(testFixedRngExpr([2, 7], '1d20@rrlte:3')).toEqual(7);
+    expect(testFixedRngExpr([2, 2], '2d20@rrlte:3')).toEqual(4);
+  });
 });
