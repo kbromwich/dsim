@@ -7,6 +7,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 
 import SimConfig from 'sim/SimConfig';
+import { DefaultRawSims } from 'sim/examples';
 import parseSearchParams from 'util/parseSeachParams';
 import { decompressFromUrl } from 'util/compression';
 
@@ -32,7 +33,7 @@ export default function App() {
   const urlParams = parseSearchParams();
 
   const urlSims = urlParams.sims && decompressFromUrl(urlParams.sims);
-  const [allSims, setAllSimsState] = React.useState(urlSims ?? localStorage.getItem('sims') ?? '');
+  const [allSims, setAllSimsState] = React.useState(urlSims ?? localStorage.getItem('sims') ?? DefaultRawSims);
   const [selectedSims, setSelectedSimsState] = React.useState(new Set(localStorage.getItem('selectedSims')?.split('\n') || []));
 
   const urlAcValues = urlParams.acValues && urlParams.acValues;
