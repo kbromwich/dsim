@@ -25,10 +25,7 @@ const EditorSidebar: React.FC<Props> = ({ editStateSet, onSimsChange, sandboxMod
         onClick={() => {
           if (state.editSims !== undefined) {
             onSimsChange(state.editSims);
-            setState({
-              editSims: undefined,
-              showEditDiff: false,
-            });
+            setState({ editSims: undefined });
           }
         }}
       >
@@ -36,7 +33,7 @@ const EditorSidebar: React.FC<Props> = ({ editStateSet, onSimsChange, sandboxMod
         {!sandboxMode && 'Save Changes'}
       </Button>
       <Button
-        disabled={state.editSims === undefined}
+        disabled={state.editSims === undefined && !state.showEditDiff}
         onClick={() => setState({ showEditDiff: !state.showEditDiff })}
       >
         {state.showEditDiff ? 'Hide Diff' : 'Show Diff'}
@@ -65,7 +62,6 @@ const EditorSidebar: React.FC<Props> = ({ editStateSet, onSimsChange, sandboxMod
           </Button>
           <Button onClick={() => setState({
             editSims: undefined,
-            showEditDiff: false,
             cancel: false,
           })}>
             Yes, revert changes!
