@@ -25,6 +25,8 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
     onStop: () => pool.terminate(),
     iterations,
     acValues,
+    rawAcValues: config.acValues,
+    rawLevels: config.levels,
   });
   
   const runs: SimRun[] = Object.values(sims.sims).flat()
