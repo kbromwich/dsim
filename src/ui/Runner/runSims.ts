@@ -1,20 +1,19 @@
 import throttle from 'lodash.throttle';
 
 import { combineStats } from 'sim/Stats';
-import { tryParseTestSimDef } from 'sim/parse';
 import { createSimParams } from 'sim/SimParams';
 import SimResult from 'sim/SimResult';
-import cleanSimsText from 'util/cleanSimsText';
 import WorkerPool from 'worker/WorkerPool';
 
+import SimConfig from 'sim/SimConfig';
+import { ParsedSims } from 'ui/useParsedSims';
 import { compressForUrl } from 'util/compression';
 import { tryParseRanges } from 'util/parseRanges';
-import SimConfig from 'sim/SimConfig';
+import iterationScale from 'util/iterationScale';
 import SimRun, { SimProgress } from './SimRun';
 import { RunnerState } from './RunnerState';
-import iterationScale from 'util/iterationScale';
 
-const runSims = async (rawSims: string, config: SimConfig, selected: Set<string>, setState: (runState: Partial<RunnerState>) => void) => {
+const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string>, setState: (runState: Partial<RunnerState>) => void) => {
   const acValues = tryParseRanges(config.acValues) || [];
   const levels = tryParseRanges(config.levels) || [];
   const pool = new WorkerPool(config.workers);
@@ -28,27 +27,17 @@ const runSims = async (rawSims: string, config: SimConfig, selected: Set<string>
     acValues,
   });
   
-  const parseErrors: string[] = [];
-  const runs: SimRun[] = cleanSimsText(rawSims.split('\n')).map((rawSimDef): SimRun[] => {
-    try {
-      const sims = tryParseTestSimDef(rawSimDef)
-        .filter((s) => selected.has(s.name) && levels.includes(s.level));
-      return sims.map((sim) => acValues.map((ac) => ({
-        simulation: sim,
-        simParams: createSimParams(sim.level, ac),
-        maxProgress: 0,
-        minProgress: 0,
-        updateTime: 0,
-        error: sim.error,
-      }))).flat();
-    } catch (e) {
-      console.error(`Error parsing simulation defintion "${rawSimDef}": ${e}`, e);
-      parseErrors.push(`Error parsing "${rawSimDef}": ${e}`);
-      return [];
-    }
-  }).flat();
+  const runs: SimRun[] = Object.values(sims.sims).flat()
+    .filter((s) => selected.has(s.name) && levels.includes(s.level))
+    .map((sim): SimRun[] => acValues.map((ac) => ({
+      simulation: sim,
+      simParams: createSimParams(sim.level, ac),
+      maxProgress: 0,
+      minProgress: 0,
+      updateTime: 0,
+      error: sim.error,
+    }))).flat();
   setState({
-    errors: parseErrors,
     compressedSimDefs: compressForUrl([...new Set(
       runs.map((r) => r.simulation.simDefinition)
     )].join('\n')),

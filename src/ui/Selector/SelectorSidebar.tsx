@@ -1,25 +1,16 @@
 import React from 'react';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-
-import { SelectorStateSet } from './SelectorState';
+import Typography from '@mui/material/Typography';
 
 interface Props {
   selected: Set<string>;
-  onSelectedChange: (sims: Set<string>) => void;
-  selectStateSet: SelectorStateSet;
 }
 
-const SelectorSidebar: React.FC<Props> = ({ selectStateSet, selected, onSelectedChange }) => {
-  const [state] = selectStateSet;
+const SelectorSidebar: React.FC<Props> = ({ selected }) => {
   return (
     <Box sx={{ bgcolor: 'background.default' }}>
-      <Button
-        onClick={() => onSelectedChange(new Set(selected.size ? [] : Object.keys(state.parsedSims)))}
-      >
-        {selected.size ? 'Select None' : 'Select All'}
-      </Button>
+      <Typography sx={{ py: 2 }}>Selected: {selected.size}</Typography>
     </Box>
   );
 };

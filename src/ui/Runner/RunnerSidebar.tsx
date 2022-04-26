@@ -8,19 +8,20 @@ import SimConfig from 'sim/SimConfig';
 import { tryParseRanges } from 'util/parseRanges';
 import buildUrl from 'util/buildUrl';
 
+import { ParsedSims } from 'ui/useParsedSims';
 import SimConfiguration from 'ui/SimConfiguration';
 import { RunnerState, RunnerStateSet } from './RunnerState';
 import runSims from './runSims';
 
 interface Props {
-  rawSims: string;
+  sims: ParsedSims;
   selected: Set<string>;
   config: SimConfig;
   onConfigChange: (config: SimConfig) => void;
   runStateSet: RunnerStateSet;
 }
 
-const RunnerSidebar: React.FC<Props> = ({ rawSims, selected, config, onConfigChange, runStateSet }) => {
+const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange, runStateSet }) => {
   const [state] = runStateSet;
   const acValues = tryParseRanges(config.acValues) || [];
   const levels = tryParseRanges(config.levels) || [];
@@ -42,7 +43,7 @@ const RunnerSidebar: React.FC<Props> = ({ rawSims, selected, config, onConfigCha
           if (isRunning) {
             state.onStop?.();
           } else {
-            runSims(rawSims, config, selected, setSimSetRunState);
+            runSims(sims, config, selected, setSimSetRunState);
           }
         }}
       >

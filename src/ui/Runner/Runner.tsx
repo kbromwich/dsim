@@ -3,24 +3,18 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
 
-import SimConfig from 'sim/SimConfig';
-
 import Timer from 'ui/Timer';
 import SimResultsTable from './SimResultsTable';
 import { RunnerStateSet } from './RunnerState';
 
 interface Props {
-  rawSims: string;
-  config: SimConfig;
-  selected: Set<string>;
   runStateSet: RunnerStateSet;
 }
 
-const Runner: React.FC<Props> = ({ rawSims, config, selected, runStateSet }) => {
+const Runner: React.FC<Props> = ({ runStateSet }) => {
   const [state] = runStateSet;
   const isRunning = state.status === 'running';
   const hasRun = !isRunning && state.status !== 'init';
-
   
   return (
     <Box sx={{ padding: 1 }}>
@@ -44,7 +38,6 @@ const Runner: React.FC<Props> = ({ rawSims, config, selected, runStateSet }) => 
               Simulations {state.status} after {(state.time / 1000).toFixed(1)} seconds ({state.iterations} iterations each).
             </Typography>
           )}
-          {state.errors.map((error) => <Typography key={error}>{error}</Typography>)}
         </>
       )}
     </Box>

@@ -1,81 +1,111 @@
 import React from 'react';
 
 import Box from '@mui/material/Box';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import Checkbox from '@mui/material/Checkbox';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
-
+import Typography from '@mui/material/Typography';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 
+import { ParsedSims } from 'ui/useParsedSims';
 import { SelectorStateSet } from './SelectorState';
+import search from './search';
+import SelectorList from './SelectorList';
+import { objectFilter } from 'util/objects';
 
 interface Props {
+  sims: ParsedSims;
   selected: Set<string>;
   onSelectedChange: (sims: Set<string>) => void;
   selectStateSet: SelectorStateSet;
 }
 
-const Selector: React.FC<Props> = ({ selected, onSelectedChange, selectStateSet }) => {
+const Selector: React.FC<Props> = ({ sims, selected, onSelectedChange, selectStateSet }) => {
   const [state, setState] = selectStateSet;
-
-  const toggleSimSelected = (simName: string) => {
-    const newSelected = new Set(selected);
-    if (newSelected.has(simName)) {
-      newSelected.delete(simName);
-    } else {
-      newSelected.add(simName)
-    }
-    onSelectedChange(newSelected);
-  };
-
-  const searchedNames = Object.keys(state.parsedSims).filter((simName) => {
-    const name = state.searchCaseInsensitive ? simName.toLowerCase() : simName;
-    return name.includes(state.search);
-  });
+  const searchedNames = search(state.search, sims.names, state.searchCaseInsensitive);
+  const searchSel = searchedNames.filter((n) => selected.has(n));
+  const allSearchSel = searchSel.length === searchedNames.length;
+  const nonSearchSelSims = objectFilter(sims.sims, (name) => (
+    selected.has(name) && !searchedNames.includes(name)
+  ));
 
   return (
-    <Box sx={{ flexBasis: '33%', padding: 1 }}>
-      <TextField
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-        onChange={(e) => setState({ search: e.target.value })}
-        value={state.search}
+    <Box>
+      <Box sx={{ display: 'flex', pt: 1 }}>
+        <Checkbox
+          checked={!!searchSel.length && allSearchSel}
+          indeterminate={!!searchSel.length && !allSearchSel}
+          onClick={() => {
+            if (searchSel.length) {
+              onSelectedChange(new Set([...selected].filter((n) => !searchSel.includes(n))));
+            } else {
+              onSelectedChange(new Set([...selected, ...searchedNames]));
+            }
+          }}
+          sx={{ px: 1.6, mr: 2 }}
+          tabIndex={-1}
+          title="Select / deselect all"
+        />
+        <TextField
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: !!state.search && (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setState({ search: '' })}>
+                  <ClearIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          onChange={(e) => setState({ search: e.target.value })}
+          value={state.search}
+        />
+      </Box>
+      <SelectorList
+        sims={objectFilter(sims.sims, (name) => searchedNames.includes(name))}
+        selected={selected}
+        onSelectedChange={onSelectedChange}
+        onExpandedChange={(names) => setState({ expandedSims: names })}
+        expandedSims={state.expandedSims}
       />
-      <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-        {searchedNames.map((simName) => (
-          <ListItem
-            key={simName}
-            // secondaryAction={
-            //   <IconButton edge="end" aria-label="comments">
-            //     <CommentIcon />
-            //   </IconButton>
-            // }
-            disablePadding
-          >
-            <ListItemButton onClick={() => toggleSimSelected(simName)} dense>
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={selected.has(simName)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemIcon>
-              <ListItemText primary={simName} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      {!!Object.keys(nonSearchSelSims).length && (
+        <>
+        <Divider sx={{ mx: 2, maxWidth: 600 }} />
+          {/* <Box sx={{ display: 'flex' }}>
+            <Checkbox
+              checked={!!selected.size && allSelected}
+              indeterminate={!!selected.size && !allSelected}
+              onClick={() => {
+                if (selected.size) {
+                  onSelectedChange(new Set());
+                } else {
+                  onSelectedChange(new Set(sims.names));
+                }
+              }}
+              sx={{ px: 1.6, mr: 2 }}
+              tabIndex={-1}
+              title="Select / deselect all"
+            />
+          </Box> */}
+          <Typography sx={{ mx: 2, mt: 2, fontStyle: 'italic' }} variant="body2">
+            The following simulations are currently selected but don't match the search:
+          </Typography>
+          <SelectorList
+            sims={nonSearchSelSims}
+            selected={selected}
+            onSelectedChange={onSelectedChange}
+            onExpandedChange={(names) => setState({ expandedSims: names })}
+            expandedSims={state.expandedSims}
+          />
+        </>
+      )}
     </Box>
   );
 };

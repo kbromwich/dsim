@@ -11,11 +11,12 @@ import { DefaultRawSims } from 'sim/examples';
 import parseSearchParams from 'util/parseSeachParams';
 import { decompressFromUrl } from 'util/compression';
 
+import { useParsedSims } from './useParsedSims';
 import { useEditorState } from './Editor/EditorState';
 import EditorSidebar from './Editor/EditorSidebar';
 import Editor from './Editor/Editor';
 import { useSelectorState } from './Selector/SelectorState';
-import ListSidebar from './Selector/SelectorSidebar';
+import SelectorSidebar from './Selector/SelectorSidebar';
 import Selector from './Selector/Selector';
 import { useRunnerState } from './Runner/RunnerState';
 import RunnerSidebar from './Runner/RunnerSidebar';
@@ -68,10 +69,11 @@ export default function App() {
     saveSetting('tab', String(tab));
   };
 
+  const parsedSims = useParsedSims(allSims);
   const editorStateSet = useEditorState(sandboxMode);
   const editsInProgress = editorStateSet[0].editSims !== undefined;
-  const selectorStateSet = useSelectorState(allSims);
-  const runnerStateSet = useRunnerState(allSims);
+  const selectorStateSet = useSelectorState(parsedSims, selectedSims, setSelectedSims);
+  const runnerStateSet = useRunnerState();
 
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
@@ -108,17 +110,11 @@ export default function App() {
             editStateSet={editorStateSet}
           />
         )}
-        {tab === 2 && (
-          <ListSidebar
-            selected={selectedSims}
-            onSelectedChange={setSelectedSims}
-            selectStateSet={selectorStateSet}
-          />
-        )}
+        {tab === 2 && <SelectorSidebar selected={selectedSims} />}
         {tab === 3 && (
           <RunnerSidebar
-            rawSims={allSims}
-            selected={selectedSims}
+            sims={parsedSims}
+            selected={!selectedSims.size ? new Set(parsedSims.names) : selectedSims}
             config={config}
             onConfigChange={setConfig}
             runStateSet={runnerStateSet}
@@ -135,19 +131,13 @@ export default function App() {
         )}
         {tab === 2 && (
           <Selector
+            sims={parsedSims}
             selected={selectedSims}
             onSelectedChange={setSelectedSims}
             selectStateSet={selectorStateSet}
           />
         )}
-        {tab === 3 && (
-          <Runner
-            config={config}
-            rawSims={allSims}
-            selected={selectedSims}
-            runStateSet={runnerStateSet}
-          />
-        )}
+        {tab === 3 && <Runner runStateSet={runnerStateSet} />}
       </Box>
     </Box>
   );

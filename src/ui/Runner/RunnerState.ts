@@ -6,7 +6,6 @@ export interface RunnerState {
   onStop?: () => void;
   time: number;
   results: SimRun[];
-  errors: string[];
   iterations: number;
   acValues: number[];
   rawAcValues: string;
@@ -16,13 +15,12 @@ export interface RunnerState {
 
 export type RunnerStateSet = [RunnerState, (newState: Partial<RunnerState>) => void];
 
-export const useRunnerState = (sims: string): RunnerStateSet => {
+export const useRunnerState = (): RunnerStateSet => {
   const [state, setState] = React.useState<RunnerState>({
     status: 'init',
     onStop: undefined,
     time: 0,
     results: [],
-    errors: [],
     iterations: 0,
     acValues: [],
     rawAcValues: '',
