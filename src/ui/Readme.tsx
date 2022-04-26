@@ -46,7 +46,11 @@ const Readme = () => (
         <CodeBlock>{examples.multiAttack}</CodeBlock>
       </p>
       <p>
-        More advanced definitions are also possible...
+        Model a "build" leveling up with multiple definitions of the same name:
+        <CodeBlock>{examples.multiLevel}</CodeBlock>
+      </p>
+      <p>
+        More complex definitions are also possible:
         <CodeBlock>{examples.advanced}</CodeBlock>
       </p>
     </Typography>
