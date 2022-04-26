@@ -36,6 +36,10 @@ const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange
   const isRunning = state.status === 'running';
   return (
     <Box sx={{ bgcolor: 'background.default' }}>
+      <SimConfiguration
+        config={config}
+        onChange={onConfigChange}
+      />
       <Button
         color="primary"
         disabled={!levels.length || !acValues.length || !iterations}
@@ -59,10 +63,6 @@ const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange
           })}>Perma-link to this simulation</a>
         </Typography>
       )}
-      <SimConfiguration
-        config={config}
-        onChange={onConfigChange}
-      />
     </Box>
   );
 };
