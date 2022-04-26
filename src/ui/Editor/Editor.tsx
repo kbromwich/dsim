@@ -122,13 +122,13 @@ const Editor: React.FC<Props> = ({ sims, editStateSet }) => {
   };
   const stateSetRef = React.useRef(stateSetRefValue);
   stateSetRef.current = stateSetRefValue;
-  if (showEditDiff && editSims !== undefined) {
+  if (showEditDiff) {
     return (
       <DiffEditor
         width="100%"
-        height="75vh"
+        height="100%"
         original={sims}
-        modified={editSims}
+        modified={editSims ?? sims}
         language={langName}
         onMount={(editor, monaco) => {
           onMount(monaco);
@@ -142,7 +142,7 @@ const Editor: React.FC<Props> = ({ sims, editStateSet }) => {
   return (
     <MonacoEditor
       width="100%"
-      height="75vh"
+      height="100%"
       value={editSims ?? sims}
       language={langName}
       onMount={(editor, monaco) => {

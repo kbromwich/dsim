@@ -125,7 +125,7 @@ export default function App() {
           />
         )}
       </SideBar>
-      <Box sx={{ height: "100vh", width: '100%' }}>
+      <Box sx={{ minHeight: "100vh", width: '100%' }}>
         {tab === 0 && <Readme />}
         {tab === 1 && (
           <Editor
