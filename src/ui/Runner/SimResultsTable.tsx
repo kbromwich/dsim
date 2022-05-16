@@ -13,11 +13,14 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 
-import SimRun from './SimRun';
 import { arrayBinned } from 'util/arrays';
-import SimResultRow from './SimResultRow';
+import parseIntStrict from 'util/parseIntStrict';
 import { combineStats, Stats } from 'sim/Stats';
 import SimResult from 'sim/SimResult';
+import DynamicAC, { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
+
+import SimRun from './SimRun';
+import SimResultRow from './SimResultRow';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(0.5),
@@ -48,21 +51,27 @@ type Order = [string, boolean];
 
 const AverageDummyAc = -1;
 const AverageMeanId = `ac.${AverageDummyAc}.mean`;
+const Dac65MeanId = `ac.${DynamicAC.SBCTH65}.mean`;
 const DefaultSortOrder: Order[] = [
   ['level', false],
+  [Dac65MeanId, false],
   [AverageMeanId, false],
   ['name', false],
 ];
 
 interface Props {
   acValues: number[];
+  dynamicACs: DynamicAC[];
   fastRender?: boolean;
   results: SimRun[];
   showExpressions?: boolean;
 }
 
-const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showExpressions }) => {
-  const [orderBy, setOrderBy] = React.useState<Order>([AverageMeanId, false]);
+const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, fastRender, results, showExpressions }) => {
+  const [orderBy, setOrderBy] = React.useState<Order>([
+    dynamicACs.includes(DynamicAC.SBCTH65) ? Dac65MeanId : AverageMeanId,
+    false,
+  ]);
   const [lockLevelSort, setlockLevelSort] = React.useState<boolean | null>(false);
 
   const [orderById, orderByAsc] = orderBy;
@@ -88,6 +97,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
     }
     return sims;
   }).sort((a, b) => {
+    // TODO: Refactor this crem...
     if (fastRender) return 0;
     for (let i = 0; i < fullSortOrder.length; i += 1) {
       const [id, asc] = fullSortOrder[i];
@@ -100,12 +110,19 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
         if (cmp !== 0) return cmp * ascMult;
       } else if (id.startsWith('ac')) {
         const [, acStr, stat] = id.split('.');
-        const ac = Number(acStr);
+        const ac = parseIntStrict(acStr);
+        let getAC: (level: number) => number = () => ac;
+        if (Number.isNaN(ac)) {
+          const dac = parseRawDynamicACs(acStr)[0];
+          if (dac) {
+            getAC = DynamicACData[dac].calculate;
+          }
+        }
         const statA = (a as SimResult[])
-          .find((s) => s.simParams.ac === ac)
+          .find((s) => s.simParams.ac === getAC(s.simParams.level))
           ?.stats?.[stat as keyof Stats];
         const statB = (b as SimResult[])
-          .find((s) => s.simParams.ac === ac)
+          .find((s) => s.simParams.ac === getAC(s.simParams.level))
           ?.stats?.[stat as keyof Stats];
         if (statA && statB) {
           const cmp = statA - statB;
@@ -168,6 +185,11 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
                 AC {ac}
               </StyledTableCell>
             ))}
+            {dynamicACs.map((dac) => (
+              <StyledTableCell key={dac} colSpan={2} align="center" title={DynamicACData[dac].description}>
+                {DynamicACData[dac].displayName}
+              </StyledTableCell>
+            ))}
             {showAverage && (
               <StyledTableCell colSpan={2} align="center">Average</StyledTableCell>
             )}
@@ -183,6 +205,16 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
                 </StyledTableCell>
                 <StyledTableCell className="stdev" align="right">
                   {sortLabel(`ac.${ac}.stdev`, 'stdev')}
+                </StyledTableCell>
+              </Fragment>
+            ))}
+            {dynamicACs.map((dac) => (
+              <Fragment>
+                <StyledTableCell className="mean" align="right">
+                  {sortLabel(`ac.${dac}.mean`, 'mean')}
+                </StyledTableCell>
+                <StyledTableCell className="stdev" align="right">
+                  {sortLabel(`ac.${dac}.stdev`, 'stdev')}
                 </StyledTableCell>
               </Fragment>
             ))}
@@ -204,7 +236,11 @@ const SimResultsTable: React.FC<Props> = ({ acValues, fastRender, results, showE
             const separatePrevious = lockLevelSort !== null && changingLevel;
             return (
               <SimResultRow
-                acValues={showAverage ? [...acValues, AverageDummyAc] : acValues}
+                acValues={[
+                  ...acValues,
+                  ...dynamicACs.map((dac) => DynamicACData[dac].calculate(sims[0].simParams.level)),
+                  ...(showAverage ? [AverageDummyAc] : []),
+                ]}
                 fastRender={fastRender}
                 key={sims[0].simulation.id()}
                 showExpressions

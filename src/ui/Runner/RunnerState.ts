@@ -1,4 +1,5 @@
 import React from 'react';
+import DynamicAC from 'sim/DynamicAC';
 import SimRun from './SimRun';
 
 export interface RunnerState {
@@ -8,9 +9,12 @@ export interface RunnerState {
   results: SimRun[];
   iterations: number;
   acValues: number[];
+  dynamicACs: DynamicAC[];
   rawAcValues: string;
+  rawDynamicAc: string;
+  rawSaveModOffset: string;
   rawLevels: string;
-  compressedSimDefs: string
+  compressedSimDefs: string;
 }
 
 export type RunnerStateSet = [RunnerState, (newState: Partial<RunnerState>) => void];
@@ -23,7 +27,10 @@ export const useRunnerState = (): RunnerStateSet => {
     results: [],
     iterations: 0,
     acValues: [],
+    dynamicACs: [],
     rawAcValues: '',
+    rawDynamicAc: '',
+    rawSaveModOffset: '',
     rawLevels: '',
     compressedSimDefs: '',
   });

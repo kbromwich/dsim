@@ -5,9 +5,9 @@ interface SimParams {
   readonly level: number;
 }
 
-export const createSimParams = (level: number, ac: number): SimParams => ({
+export const createSimParams = (level: number, ac: number, smOffset: number): SimParams => ({
   ac,
-  sm: ac - 10,
+  sm: ac - smOffset,
   pb: Math.floor((7 + level) / 4),
   level,
 });

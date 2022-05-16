@@ -12,9 +12,14 @@ import { tryParseRanges } from 'util/parseRanges';
 import iterationScale from 'util/iterationScale';
 import SimRun, { SimProgress } from './SimRun';
 import { RunnerState } from './RunnerState';
+import { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
+import parseIntStrict from 'util/parseIntStrict';
 
 const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string>, setState: (runState: Partial<RunnerState>) => void) => {
   const acValues = tryParseRanges(config.acValues) || [];
+  const dynamicACs = parseRawDynamicACs(config.dynamicAc);
+  const smOffset = parseIntStrict(config.saveModOffset);
+  const dacCalcs = dynamicACs.map((dac) => DynamicACData[dac].calculate);
   const levels = tryParseRanges(config.levels) || [];
   const pool = new WorkerPool(config.workers);
   const iterations = iterationScale(config.iterations);
@@ -25,20 +30,25 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
     onStop: () => pool.terminate(),
     iterations,
     acValues,
+    dynamicACs,
     rawAcValues: config.acValues,
+    rawDynamicAc: config.dynamicAc,
     rawLevels: config.levels,
   });
   
   const runs: SimRun[] = Object.values(sims.sims).flat()
     .filter((s) => selected.has(s.name) && levels.includes(s.level))
-    .map((sim): SimRun[] => acValues.map((ac) => ({
-      simulation: sim,
-      simParams: createSimParams(sim.level, ac),
-      maxProgress: 0,
-      minProgress: 0,
-      updateTime: 0,
-      error: sim.error,
-    }))).flat();
+    .map((sim): SimRun[] => {
+      const dacAcs = dacCalcs.map((calc) => calc(sim.level));
+      return [...new Set([...acValues, ...dacAcs])].map((ac) => ({
+        simulation: sim,
+        simParams: createSimParams(sim.level, ac, smOffset),
+        maxProgress: 0,
+        minProgress: 0,
+        updateTime: 0,
+        error: sim.error,
+      }))
+    }).flat();
   setState({
     compressedSimDefs: compressForUrl([...new Set(
       runs.map((r) => r.simulation.simDefinition)

@@ -1,9 +1,9 @@
+import parseIntStrict from './parseIntStrict';
 import { range } from './range';
 
 const parsePositiveIntStrict = (value: string): number => {
-  const num = Number(value);
-  const parsedInt = parseInt(value, 10);
-  return (num === parsedInt) && (num >= 0) ? num : NaN;
+  const num = parseIntStrict(value);
+  return num >= 0 ? num : NaN;
 };
 
 /** Parse strings such as "1-5,7,9,11-20" into a list of (integer) values */

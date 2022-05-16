@@ -1,12 +1,16 @@
 import React from 'react';
 
 import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import SimConfig from 'sim/SimConfig';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import Slider from '@mui/material/Slider';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+
+import SimConfig from 'sim/SimConfig';
 import iterationScale from 'util/iterationScale';
 import { tryParseRanges } from 'util/parseRanges';
+import DynamicAC, { DynamicACData } from 'sim/DynamicAC';
 
 interface Props {
   config: SimConfig;
@@ -21,9 +25,10 @@ const iterLabels = [
 ];
 
 const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
-  const { levels, iterations, workers, acValues } = config;
+  const { levels, iterations, workers, acValues, dynamicAc, saveModOffset } = config;
+  const acError = !(dynamicAc || acValues) || !!(acValues && !tryParseRanges(acValues));
   return (
-    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 1, }}>
+    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2, }}>
       <TextField
         error={!tryParseRanges(levels)}
         label="Levels"
@@ -32,11 +37,40 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
         title="Levels to simulate. Comma separated, and can be ranges; e.g. &quot;1,2,3-5,8-10&quot;"
       />
       <TextField
-        error={!tryParseRanges(acValues)}
+        error={acError}
         label="Armor Classes"
         value={acValues}
         onChange={(e) => onChange({ ...config, acValues: e.target.value })}
         title="ACs to simulate. Comma separated, and can be ranges; e.g. &quot;10,12-15,18,20&quot;"
+      />
+      <FormControlLabel
+        label="Add Leveled AC: 65% Hit Chance"
+        control={
+          <Checkbox
+            checked={dynamicAc === DynamicAC.SBCTH65}
+            onChange={(_, checked) => {
+              if (dynamicAc.includes(DynamicAC.SBCTH65)) {
+                onChange({ ...config, dynamicAc: '' });
+              } else {
+                onChange({ ...config, dynamicAc: DynamicAC.SBCTH65 });
+              }
+            }}
+          />
+        }
+        title={DynamicACData[DynamicAC.SBCTH65].description}
+      />
+      <TextField
+        error={!tryParseRanges(levels)}
+        label="Save Modifier AC Offset"
+        value={saveModOffset}
+        onChange={(e) => onChange({ ...config, saveModOffset: e.target.value })}
+        title={`Save modifier (SM) will be:
+  SM = AC - x
+Where "x" is the offset specified here. Smaller values will make saves more
+likely to succeed.
+
+Setting this to a value of 14 will result in a 65% chance for saves to fail in a
+"standard build" when in combination with "Leveled AC: 65% Hit Chance".`}
       />
       <Box sx={{ px: 1 }}>
         <Typography title="Number of iterations to perform for each simulation">

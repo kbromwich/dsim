@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
 import SimConfig from 'sim/SimConfig';
+import { parseRawDynamicACs } from 'sim/DynamicAC';
 import { tryParseRanges } from 'util/parseRanges';
 import buildUrl from 'util/buildUrl';
 
@@ -12,6 +13,7 @@ import { ParsedSims } from 'ui/useParsedSims';
 import SimConfiguration from 'ui/SimConfiguration';
 import { RunnerState, RunnerStateSet } from './RunnerState';
 import runSims from './runSims';
+import parseIntStrict from 'util/parseIntStrict';
 
 interface Props {
   sims: ParsedSims;
@@ -24,6 +26,8 @@ interface Props {
 const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange, runStateSet }) => {
   const [state] = runStateSet;
   const acValues = tryParseRanges(config.acValues) || [];
+  const dacValues = parseRawDynamicACs(config.dynamicAc) || [];
+  const smOffset = parseIntStrict(config.saveModOffset);
   const levels = tryParseRanges(config.levels) || [];
   const iterations = config.iterations;
 
@@ -42,7 +46,12 @@ const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange
       />
       <Button
         color="primary"
-        disabled={!levels.length || !acValues.length || !iterations}
+        disabled={
+          !levels.length
+          || (!acValues.length && !dacValues.length)
+          || !iterations
+          || Number.isNaN(smOffset)
+        }
         onClick={() => {
           if (isRunning) {
             state.onStop?.();
@@ -57,8 +66,10 @@ const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange
       {state?.compressedSimDefs && (
         <Typography sx={{ fontStyle: 'italic' }} variant="body2">
           <a href={buildUrl({
-            acValues: state.rawAcValues,
-            levels: state.rawLevels,
+            ac: state.rawAcValues,
+            dac: state.rawDynamicAc,
+            lvl: state.rawLevels,
+            smo: state.rawSaveModOffset,
             sims: state.compressedSimDefs,
           })}>Perma-link to this simulation</a>
         </Typography>

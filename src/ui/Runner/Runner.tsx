@@ -22,6 +22,7 @@ const Runner: React.FC<Props> = ({ runStateSet }) => {
         <>
           <SimResultsTable
             acValues={state.acValues}
+            dynamicACs={state.dynamicACs}
             results={state.results}
             fastRender={isRunning}
             showExpressions

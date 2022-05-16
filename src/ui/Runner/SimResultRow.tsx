@@ -68,46 +68,44 @@ interface Props {
   showExpressions?: boolean;
   topDivider?: boolean;
 }
-const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, topDivider }) => {
-  return (
-    <StyledTableRow className={topDivider ? 'topDivider' : undefined}  key={sims[0].simulation.id()}>
-      <StyledTableCell className="name">
-        {sims[0].simulation.name}
-      </StyledTableCell>
-      <StyledTableCell align="center" className="level">
-        {sims[0].simulation.level}
-      </StyledTableCell>
-      {acValues.map((ac) => {
-        const sim = sims.find((s) => s.simParams.ac === ac);
-        if (sim) {
-          if ('stats' in sim) {
-            return <StatsCell key={`${ac}-stats`} stats={sim.stats} />
-          } else if ('error' in sim && sim.error) {
-            return (
-              <StyledTableCell align="center" key={`${ac}-error`} colSpan={2} title={sim.error}>
-                Error
-              </StyledTableCell>
-            );
-          } else if ('maxProgress' in sim && sim.maxProgress) {
-            return (
-              <StyledTableCell key={`${ac}-progress`} colSpan={2}>
-                <NoTransitionProgress
-                  value={sim.minProgress * 100}
-                  valueBuffer={sim.maxProgress * 100}
-                  variant="buffer"
-                />
-              </StyledTableCell>
-            );
-          }
+const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, topDivider }) => (
+  <StyledTableRow className={topDivider ? 'topDivider' : undefined}  key={sims[0].simulation.id()}>
+    <StyledTableCell className="name">
+      {sims[0].simulation.name}
+    </StyledTableCell>
+    <StyledTableCell align="center" className="level">
+      {sims[0].simulation.level}
+    </StyledTableCell>
+    {acValues.map((ac, i) => {
+      const sim = sims.find((s) => s.simParams.ac === ac);
+      if (sim) {
+        if ('stats' in sim) {
+          return <StatsCell key={`${i}-${ac}-stats`} stats={sim.stats} />
+        } else if ('error' in sim && sim.error) {
+          return (
+            <StyledTableCell align="center" key={`${i}-${ac}-error`} colSpan={2} title={sim.error}>
+              Error
+            </StyledTableCell>
+          );
+        } else if ('maxProgress' in sim && sim.maxProgress) {
+          return (
+            <StyledTableCell key={`${i}-${ac}-progress`} colSpan={2}>
+              <NoTransitionProgress
+                value={sim.minProgress * 100}
+                valueBuffer={sim.maxProgress * 100}
+                variant="buffer"
+              />
+            </StyledTableCell>
+          );
         }
-        return <StyledTableCell colSpan={2} key={`${ac}-empty`} />;
-      })}
-      {showExpressions && (
-        <StyledTableCell className="expression">{sims[0].simulation.rawExpression}</StyledTableCell>
-      )}
-    </StyledTableRow>
-  );
-};
+      }
+      return <StyledTableCell colSpan={2} key={`${i}-${ac}-empty`} />;
+    })}
+    {showExpressions && (
+      <StyledTableCell className="expression">{sims[0].simulation.rawExpression}</StyledTableCell>
+    )}
+  </StyledTableRow>
+);
 
 interface MemoProps extends Props {
   fastRender?: boolean;

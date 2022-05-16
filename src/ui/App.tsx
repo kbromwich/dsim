@@ -22,6 +22,7 @@ import { useRunnerState } from './Runner/RunnerState';
 import RunnerSidebar from './Runner/RunnerSidebar';
 import Runner from './Runner/Runner';
 import Readme from './Readme';
+import DynamicAC from 'sim/DynamicAC';
 
 
 const SideBar = styled('div')(({ theme }) => ({
@@ -37,13 +38,17 @@ export default function App() {
   const [allSims, setAllSimsState] = React.useState(urlSims ?? localStorage.getItem('sims') ?? DefaultRawSims);
   const [selectedSims, setSelectedSimsState] = React.useState(new Set(localStorage.getItem('selectedSims')?.split('\n') || []));
 
-  const urlAcValues = urlParams.acValues && urlParams.acValues;
-  const urlLevels = urlParams.levels && urlParams.levels;
+  const urlAcValues = urlParams.ac;
+  const urlDynamicAc = urlParams.dac;
+  const urlSaveModOffset = urlParams.smo;
+  const urlLevels = urlParams.lvl;
   const lsConf: Partial<SimConfig> = JSON.parse(localStorage.getItem('config') || '{}');
   const [config, setConfigState] = React.useState<SimConfig>({
     acValues: urlAcValues || lsConf.acValues || '12,15,18',
-    iterations: lsConf.iterations ?? 3,
+    dynamicAc: urlDynamicAc || lsConf.dynamicAc || DynamicAC.SBCTH65,
+    saveModOffset: urlSaveModOffset || lsConf.saveModOffset || '11',
     levels: urlLevels || lsConf.levels || '1-20',
+    iterations: lsConf.iterations ?? 3,
     workers: lsConf.workers || Math.ceil(navigator.hardwareConcurrency / 2),
   });
   
@@ -53,7 +58,6 @@ export default function App() {
 
   const setAllSims = (sims: string) => {
     setAllSimsState(sims);
-    console.log('saving sims', sandboxMode, sims);
     saveSetting('sims', sims);
   };
   const setSelectedSims = (simNames: Set<string>) => {
