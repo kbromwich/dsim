@@ -1,5 +1,5 @@
 import SimParams from 'sim/SimParams';
-import { Stats } from 'sim/Stats';
+import Distribution from 'util/Distribution';
 import { range } from 'util/range';
 import { CompleteMessage, ToWorkerMessages } from './Messages';
 
@@ -26,7 +26,7 @@ class WorkerPool {
     this.reject = undefined;
   }
 
-  run(config: WorkerConfig, iterations: number, onProgress?: (maxPercDone: number, minPercDone: number) => void): Promise<Stats[]> {
+  run(config: WorkerConfig, iterations: number, onProgress?: (maxPercDone: number, minPercDone: number) => void): Promise<Distribution> {
     if (this.working.size) {
       throw new Error('A previous run has not yet finished!');
     }
@@ -34,7 +34,7 @@ class WorkerPool {
       this.reject = rej;
       const itersPerJob = Math.min(100000, Math.max(1000, iterations / (3 * this.workers.length)));
       let itersLeft = iterations;
-      const results: Stats[] = [];
+      const results: Distribution[] = [];
 
       const sendProgressUpdate = () => {
         const maxDone = iterations - itersLeft; 
@@ -51,7 +51,7 @@ class WorkerPool {
         } else {
           this.working.delete(worker);
           if (this.working.size === 0) {
-            res(results);
+            res(Distribution.merge(...results));
           } else {
             sendProgressUpdate();
           }
@@ -59,7 +59,7 @@ class WorkerPool {
       };
 
       const onResult = (worker: Worker, message: MessageEvent<CompleteMessage>) => {
-        results.push(message.data.stats);
+        results.push(message.data.distribution);
         assignJobToWorker(worker);
       };
 

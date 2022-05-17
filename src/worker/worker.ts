@@ -2,7 +2,7 @@ import { parseSimExpr } from 'sim/parse';
 import SimParams from 'sim/SimParams';
 import SimState from 'sim/SimState';
 import { BaseSimulation } from 'sim/Simulation';
-import calculateStats from 'sim/Stats';
+import { MutableDistribution } from 'util/Distribution';
 import { ToWorkerMessages } from './Messages';
 
 // Each worker will be effectively run in a separate interpreter, so global
@@ -19,20 +19,20 @@ onmessage = function(event: MessageEvent<ToWorkerMessages>) {
     simParams = config;
   } else if (data.command === 'run') {
     const { iterations } = data;
-    const stats = runSims(iterations);
-    this.postMessage({ command: 'complete', stats });
+    const distribution = runSims(iterations);
+    this.postMessage({ command: 'complete', distribution });
   }
 }
 
 function runSims(iterations: number) {
   if (!simulation || !simParams) throw new Error('Worker is not configured!');
-  const results: number[] = [];
+  const results = new MutableDistribution();
   const state = new SimState(simParams);
   for (let i = 0; i < iterations; i++) {
     state.reset();
-    results.push(simulation.run(state));
+    results.increment(simulation.run(state));
   }
-  return calculateStats(results);
+  return results.toImmutable();
 }
 
 export {}

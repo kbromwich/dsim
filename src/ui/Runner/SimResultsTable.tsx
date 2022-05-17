@@ -16,13 +16,14 @@ import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 import { arrayBinned } from 'util/arrays';
 import parseIntStrict from 'util/parseIntStrict';
-import { combineStats, Stats } from 'sim/Stats';
+import calculateStats, { Stats } from 'sim/Stats';
 import SimResult from 'sim/SimResult';
 import DynamicAC, { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 
 import SimRun from './SimRun';
 import SimResultRow from './SimResultRow';
 import SimResultDetails from './SimResultDetails';
+import Distribution from 'util/Distribution';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(0.5),
@@ -100,10 +101,12 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, fastRender, re
     if (showAverage) {
       const firstNotReady = sims.find((s) => !('stats' in s));
       if (!firstNotReady) {
+        const avg = Distribution.merge(...(sims as SimResult[]).map((r) => r.dist));
         return [...sims, new SimResult(
           sims[0].simulation,
           { ...sims[0].simParams, ac: AverageDummyAc },
-          combineStats((sims as SimResult[]).map((s) => s.stats)),
+          calculateStats(avg),
+          avg,
         )];
       } else {
         return [...sims, firstNotReady];

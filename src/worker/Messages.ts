@@ -1,5 +1,5 @@
 import SimParams from 'sim/SimParams';
-import { Stats } from 'sim/Stats';
+import Distribution from 'util/Distribution';
 
 export interface ConfigureMessage {
   command: 'configure';
@@ -18,7 +18,7 @@ export interface StopMessage {
 
 export interface CompleteMessage {
   command: 'complete';
-  stats: Stats;
+  distribution: Distribution;
 }
 
 export type ToWorkerMessages = ConfigureMessage | RunMessage | StopMessage;

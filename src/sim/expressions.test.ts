@@ -1,4 +1,5 @@
 import calculateStats from 'sim/Stats';
+import { MutableDistribution } from 'util/Distribution';
 import mulberry32 from 'util/mulberry32';
 import Expression from './Expression';
 import { exportedForTesting } from './expressions';
@@ -19,14 +20,14 @@ function testExpr(rawExpr: string, stateOverride?: Partial<SimState>) {
 function testRngExpr(rawExpr: string, runs: number, acc: number, stateOverride?: Partial<SimState>, rng?: () => number) {
   exportedForTesting.setRandomFunction(rng || mulberry32(RandomTestSeed));
   const expr = parseSimExpr(rawExpr);
-  const results = [];
+  const results = new MutableDistribution();
   const state = new SimState({ ac: 10, pb: 2, level: 1, sm: 0, ...stateOverride });
   for (let i = 0; i < runs; i++) {
     state.reset();
     stateOverride?.critStack?.forEach((v) => state.critStack.push(v));
     stateOverride?.funcReg?.forEach((v, k) => state.funcReg.set(k, v));
     stateOverride?.varReg?.forEach((v, k) => state.varReg.set(k, v));
-    results.push(expr.eval(state));
+    results.increment(expr.eval(state));
   }
   const stats = calculateStats(results);
   return {

@@ -1,6 +1,6 @@
 import throttle from 'lodash.throttle';
 
-import { combineStats } from 'sim/Stats';
+import calculateStats from 'sim/Stats';
 import { createSimParams } from 'sim/SimParams';
 import SimResult from 'sim/SimResult';
 import WorkerPool from 'worker/WorkerPool';
@@ -73,8 +73,8 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
           setState({ results: runs });
         }
       }, 30, { leading: true });
-      const result = await pool.run(workerConfig, iterations, onProgress);
-      runs[i] = new SimResult(run.simulation, run.simParams, combineStats(result));
+      const dist = await pool.run(workerConfig, iterations, onProgress);
+      runs[i] = new SimResult(run.simulation, run.simParams, calculateStats(dist), dist);
     } catch (e) {
       run.error = String(e);
       if (run.error === 'Terminated') {
