@@ -1,4 +1,4 @@
-import React, { Fragment, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { styled } from '@mui/material/styles';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -6,7 +6,7 @@ import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 
 import SimRun, { SimProgress } from './SimRun';
-import { Stats } from 'sim/Stats';
+import SimResult from 'sim/SimResult';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(0.5),
@@ -51,24 +51,44 @@ const NoTransitionProgress = styled(LinearProgress)(({ theme }) => ({
   },
 }));
 
-const StatsCell = ({ stats }: { stats: Stats }) => (
-  <Fragment>
-    <StyledTableCell className="mean" align="right">
-      {stats.mean.toFixed(2)}
-    </StyledTableCell>
-    <StyledTableCell className="stdev" align="right">
-      {stats.stdev.toFixed(2)}
-    </StyledTableCell>
-  </Fragment>
-);
+const StatsCell = ({ simResult, setStatsView }: {
+  simResult: SimResult,
+  setStatsView?: (view?: { simResult: SimResult, loc: React.RefObject<HTMLElement> }) => void;
+}) => {
+  const meanRef = React.useRef<HTMLDivElement>(null);
+  const stdevRef = React.useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <StyledTableCell
+        align="right"
+        className="mean"
+        onMouseEnter={() => setStatsView?.({ simResult, loc: meanRef })}
+        onMouseLeave={() => setStatsView?.()}
+        ref={meanRef}
+      >
+        {simResult.stats.mean.toFixed(2)}
+      </StyledTableCell>
+      <StyledTableCell
+        align="right"
+        className="stdev"
+        onMouseEnter={() => setStatsView?.({ simResult, loc: stdevRef })}
+        onMouseLeave={() => setStatsView?.()}
+        ref={stdevRef}
+      >
+        {simResult.stats.stdev.toFixed(2)}
+      </StyledTableCell>
+    </>
+  );
+};
 
 interface Props {
   acValues: number[];
   sims: SimRun[];
   showExpressions?: boolean;
   topDivider?: boolean;
+  onSetStatsView?: (view?: { simResult: SimResult, loc: React.RefObject<HTMLElement> }) => void;
 }
-const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, topDivider }) => (
+const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, onSetStatsView, topDivider }) => (
   <StyledTableRow className={topDivider ? 'topDivider' : undefined}  key={sims[0].simulation.id()}>
     <StyledTableCell className="name">
       {sims[0].simulation.name}
@@ -80,7 +100,13 @@ const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, topDiv
       const sim = sims.find((s) => s.simParams.ac === ac);
       if (sim) {
         if ('stats' in sim) {
-          return <StatsCell key={`${i}-${ac}-stats`} stats={sim.stats} />
+          return (
+            <StatsCell
+              key={`${i}-${ac}-stats`}
+              simResult={sim}
+              setStatsView={onSetStatsView}
+            />
+          );
         } else if ('error' in sim && sim.error) {
           return (
             <StyledTableCell align="center" key={`${i}-${ac}-error`} colSpan={2} title={sim.error}>

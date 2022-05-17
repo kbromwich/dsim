@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { styled } from '@mui/material/styles';
 import Checkbox from '@mui/material/Checkbox';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -9,18 +8,12 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
 
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
 import Simulation from 'sim/Simulation';
-
-const CodeBlock = styled(Typography)(({ theme }) => ({
-  padding: theme.spacing(1),
-  whiteSpace: 'pre',
-  backgroundColor: theme.palette.divider,
-}));
+import CodeBlock from 'ui/CodeBlock';
 
 const toggleSetItem = (nameSet: Set<string>, simName: string) => {
   const newSelected = new Set(nameSet);

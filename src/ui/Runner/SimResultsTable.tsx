@@ -2,6 +2,7 @@ import React, { Fragment } from 'react';
 
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
+import Popover from '@mui/material/Popover';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -21,6 +22,7 @@ import DynamicAC, { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 
 import SimRun from './SimRun';
 import SimResultRow from './SimResultRow';
+import SimResultDetails from './SimResultDetails';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(0.5),
@@ -73,6 +75,18 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, fastRender, re
     false,
   ]);
   const [lockLevelSort, setlockLevelSort] = React.useState<boolean | null>(false);
+  const [popover, setPopover] = React.useState<{
+    simResult?: SimResult,
+    loc?: React.RefObject<HTMLElement>,
+    show: boolean;
+  }>({ show: false });
+  const setStatsView = (pop?: { simResult?: SimResult, loc?: React.RefObject<HTMLElement>}) => {
+    if (pop) {
+      setPopover({ ...pop, show: true });
+    } else {
+      setPopover({ ...popover, show: false });
+    }
+  }
 
   const [orderById, orderByAsc] = orderBy;
   const locked: Order[] = lockLevelSort !== null ? [['level', lockLevelSort]] : [];
@@ -243,6 +257,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, fastRender, re
                 ]}
                 fastRender={fastRender}
                 key={sims[0].simulation.id()}
+                onSetStatsView={setStatsView}
                 showExpressions
                 sims={sims}
                 topDivider={separatePrevious}
@@ -251,6 +266,23 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, fastRender, re
           })}
         </TableBody>
       </Table>
+      <Popover
+          sx={{ pointerEvents: 'none' }}
+          open={popover.show && !!popover.loc?.current && !!popover.simResult}
+          anchorEl={popover.loc?.current}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+        >
+          {popover.simResult && (
+            <SimResultDetails simResult={popover.simResult} />
+          )}
+        </Popover>
     </TableContainer>
   );
 };
