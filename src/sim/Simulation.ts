@@ -1,4 +1,4 @@
-import Expression from './Expression';
+import Expression from './expressions/Expression';
 import SimState from './SimState';
 
 export class BaseSimulation {

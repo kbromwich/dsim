@@ -2,21 +2,37 @@ import Expression, { EvalFunc } from './Expression';
 
 export type ParseFunc<T> = (match: RegExpExecArray, subExprs: Expression[]) => T;
 
+interface ExpressionParams<T> {
+  typeName: string;
+  regex: RegExp;
+  minSubExprs?: number;
+  maxSubExprs?: number;
+  parseFunc: ParseFunc<T>;
+  evalFunc: EvalFunc<T>;
+  sample: string;
+  description: string;
+}
+
 export default class ExpressionCreator<T> {
   typeName: string;
   regex: RegExp;
   parseFunc: ParseFunc<T>;
   evalFunc: EvalFunc<T>;
   min: number; 
-  max?: number;
+  max: number;
+  sample: string;
+  description: string;
 
-  constructor(typeName: string, regex: RegExp, min: number, max: number, parseFunc: ParseFunc<T>, evalFunc: EvalFunc<T>) {
-    this.typeName = typeName
-    this.regex = regex;
-    this.parseFunc = parseFunc
-    this.evalFunc = evalFunc;
-    this.min = min; 
-    this.max = max;
+  constructor(params: ExpressionParams<T>) {
+    this.typeName = params.typeName;
+    this.regex = params.regex;
+    this.parseFunc = params.parseFunc
+    this.evalFunc = params.evalFunc;
+    this.min = params.minSubExprs || 0; 
+    this.max = params.maxSubExprs || 0;
+
+    this.sample = params.sample;
+    this.description = params.description;
   }
 
   create(expr: string, subExprs: Expression[]) {

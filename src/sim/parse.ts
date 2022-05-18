@@ -1,6 +1,7 @@
 import parseRanges from 'util/parseRanges';
-import Expression from './Expression';
-import { SplitExpressions, ValueExpressions } from './expressions';
+import Expression from './expressions/Expression';
+import { SplitExpressions } from './expressions/splitExpressions';
+import { ValueExpressions } from './expressions/valueExpressions';
 import SimState from './SimState';
 import Simulation from './Simulation';
 

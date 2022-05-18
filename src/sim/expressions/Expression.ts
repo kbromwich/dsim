@@ -1,4 +1,4 @@
-import SimState from './SimState';
+import SimState from '../SimState';
 
 export type EvalFunc<T> = (s: SimState, ctx: Expression<T>) => number;
 

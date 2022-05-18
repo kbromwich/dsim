@@ -5,12 +5,13 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import examples from 'sim/examples';
-// import { SplitExpressions, ValueExpressions } from 'sim/expressions';
+import { SplitExpressions } from 'sim/expressions/splitExpressions';
+import { ValueExpressions } from 'sim/expressions/valueExpressions';
+import CodeBlock from './CodeBlock';
 
-const CodeBlock = styled(Typography)(({ theme }) => ({
+const DescriptionBlock = styled(Typography)(({ theme }) => ({
   padding: theme.spacing(1),
-  whiteSpace: 'pre',
-  backgroundColor: theme.palette.divider,
+  whiteSpace: 'pre-wrap',
 }));
 
 const Readme = () => (
@@ -54,25 +55,28 @@ const Readme = () => (
         <CodeBlock>{examples.advanced}</CodeBlock>
       </p>
     </Typography>
-    {/*
-      
-      TODO once expressions are properly named and have
-      descriptions/explanations/examples
-
-    <Typography>
-      <p>Operator and Function Expressions:</p>
-      <ul>
-        {SplitExpressions.map((expr) => (
-          <li>{expr.typeName}</li>
-        ))}
-      </ul>
-      <p>Value Expressions:</p>
-      <ul>
-        {ValueExpressions.map((expr) => (
-          <li>{expr.typeName}</li>
-        ))}
-      </ul>
-    </Typography> */}
+    <Typography variant="h5" sx={{ mt: 4 }}>
+      Value Expressions:
+    </Typography>
+    {ValueExpressions.filter((e) => e.typeName !== 'Empty').map((expr) => (
+      <>
+        <Typography fontWeight="bold" sx={{ mt: 2 }}>
+          {expr.typeName}: {expr.sample}
+        </Typography>
+        <DescriptionBlock>{expr.description}</DescriptionBlock>
+      </>
+    ))}
+    <Typography variant="h5" sx={{ mt: 4 }}>
+      Operator and Function Expressions:
+    </Typography>
+    {SplitExpressions.map((expr) => (
+      <>
+        <Typography fontWeight="bold" sx={{ mt: 2 }}>
+          {expr.typeName}: {expr.sample}
+        </Typography>
+        <DescriptionBlock>{expr.description}</DescriptionBlock>
+      </>
+    ))}
   </Box>
 );
 
