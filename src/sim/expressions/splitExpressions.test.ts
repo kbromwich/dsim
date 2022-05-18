@@ -147,6 +147,25 @@ describe('gte', () => {
   });
 });
 
+describe('gt', () => {
+  it('resolves to true (1) when first is greater than second operand', () => {
+    expect(testExpr('1>0')).toEqual(1);
+    expect(testExpr('321>123')).toEqual(1);
+    expect(testExpr('0>-1')).toEqual(1);
+  });
+  it('resolves to false (0) when first is equal to second operand', () => {
+    expect(testExpr('0>0')).toEqual(0);
+    expect(testExpr('1>1')).toEqual(0);
+    expect(testExpr('123>123')).toEqual(0);
+    expect(testExpr('-1>-1')).toEqual(0);
+  });
+  it('resolves to false (1) when first is less than second operand', () => {
+    expect(testExpr('0>1')).toEqual(0);
+    expect(testExpr('123>321')).toEqual(0);
+    expect(testExpr('-1>0')).toEqual(0);
+  });
+});
+
 describe('lte', () => {
   it('resolves to true (1) when first is less than second operand', () => {
     expect(testExpr('0<=1')).toEqual(1);
@@ -163,6 +182,25 @@ describe('lte', () => {
     expect(testExpr('1<=0')).toEqual(0);
     expect(testExpr('321<=123')).toEqual(0);
     expect(testExpr('0<=-1')).toEqual(0);
+  });
+});
+
+describe('lt', () => {
+  it('resolves to true (1) when first is less than second operand', () => {
+    expect(testExpr('0<1')).toEqual(1);
+    expect(testExpr('123<321')).toEqual(1);
+    expect(testExpr('-1<0')).toEqual(1);
+  });
+  it('resolves to false (0) when first is equal to second operand', () => {
+    expect(testExpr('0<0')).toEqual(0);
+    expect(testExpr('1<1')).toEqual(0);
+    expect(testExpr('123<123')).toEqual(0);
+    expect(testExpr('-1<-1')).toEqual(0);
+  });
+  it('resolves to false (1) when first is greater than second operand', () => {
+    expect(testExpr('1<0')).toEqual(0);
+    expect(testExpr('321<123')).toEqual(0);
+    expect(testExpr('0<-1')).toEqual(0);
   });
 });
 

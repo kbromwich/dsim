@@ -26,26 +26,35 @@ export const ValueExpressions = [
   valueExpr('Number', 'X', /^\d+$/, (m) => ({ value: Number(m[0]) }), (s, { props }) => props.value,
   'Where X is any positive integer. Outputs the value of the integer.',
   ),
-  valueExpr('Roll Dice', 'XdY', /^(\d*)d(\d+)(?:k(h|l)(\d+))?$/,
-  (m) => ({
-    dice: new Array(Number(m[1] || 1)).fill(Number(m[2])),
-    keep: (m[3] === 'l' ? -1 : 1) * Number(m[4] || m[1] || 1),
-  }),
-  (s, { props }) => {
-    const sortedRolls = props.dice.map(roll).sort((a, b) => (b - a) * Math.sign(props.keep));
-    const keptRolls = sortedRolls.slice(0, Math.abs(props.keep || props.dice.length));
-    return sum(keptRolls);
-  },
+  valueExpr('Roll Dice', 'XdY', /^(\d*)([dD])(\d+)(?:k(h|l)(\d+))?$/,
+    (m) => ({
+      crittable: m[2] === 'D',
+      dice: new Array(Number(m[1] || 1)).fill(Number(m[3])),
+      keep: (m[4] === 'l' ? -1 : 1) * Number(m[5]),
+    }),
+    (s, { props }) => {
+      let rolls = props.dice.map(roll);
+      if (props.crittable && s.crit()) {
+        rolls.push(...props.dice.map(roll));
+      }
+      if (!Number.isNaN(props.keep)) {
+        rolls.sort((a, b) => (b - a) * Math.sign(props.keep));
+        rolls = rolls.slice(0, Math.abs(props.keep));
+      }
+      return sum(rolls);
+    },
     `Where X and Y are any positive integers. Outputs the sum of rolls with a \
 dice of size Y rolled X number of times. For example:
   3d8
 In the above, an 8 sided dice will be rolled 3 times, and the output will be \
-the sum of the results.`
-  ),
-  valueExpr('roll_crit', '', /^(\d*)D(\d+)?$/,
-    (m) => ({ dice: new Array(Number(m[1] || 1)).fill(Number(m[2])) }),
-    (s, { props }) => sum(props.dice.map((d) => roll(d) + (s.crit() ? roll(d) : 0))),
-    'Deprecated. Will be removed very soon.',
+the sum of the results.
+
+Critical hits can be accounted for with an uppercase D to double the number of \
+dice rolled on a critical hit:
+  3D8
+In the above, if the critical hit flag is set  (in the right operand of an \
+Attack where the attack roll was >= to the critical threshold), then an 8 sided \
+dice will be rolled 6 times.`
   ),
   valueExpr('Armor Class', 'AC', /^AC$/, NoPF, (s, ctx) => s.ac,
     'Outputs the armor class of the target the simulation is being run against.'
