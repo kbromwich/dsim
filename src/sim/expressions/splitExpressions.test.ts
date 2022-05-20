@@ -257,11 +257,3 @@ describe('repeat', () => {
     expect(testFixedRngExpr([4, 20, 14, 7], '2#(5=atk>1D6+2)')).toEqual(8);
   });
 });
-
-describe('reroll_lte', () => {
-  it('reruns second expr if the result is less than the first expr', () => {
-    expect(testFixedRngExpr([6, 3], '1d20@rrlte:3')).toEqual(6);
-    expect(testFixedRngExpr([2, 7], '1d20@rrlte:3')).toEqual(7);
-    expect(testFixedRngExpr([2, 2], '2d20@rrlte:3')).toEqual(4);
-  });
-});

@@ -23,8 +23,8 @@ Warlock Baseline@17-20: 4#(5+PB =atk> 1D10+1D6+5)
 `.trim();
 
 const advanced = `
-GreatAxe with Great Weapon Fighting@1: 3+PB =atk> CM#(1d12 @rrlte: 2) + 3
-GreatSword with Great Weapon Fighting@1: 3+PB =atk> CM#(2#(1d6 @rrlte: 2)) + 3
+GreatAxe with Great Weapon Fighting@1: 3+PB =atk> 1D12rrle2 + 3
+GreatSword with Great Weapon Fighting@1: 3+PB =atk> 2D6rrle2 + 3
 GreatAxe with Advantage@1: 3+PB =atk:adv> 1D12+3
 GreatAxe with Disadvantage@1: 3+PB =atk:dis> 1D12+3
 GreatAxe that crits on a 19@1: 3+PB =atk:19> 1D12+3

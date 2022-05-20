@@ -197,21 +197,10 @@ Decimal results are rounded down the nearest whole integer.`,
     `Outputs the sum of repeating evaluation of the right operand a number of \
 times equal to the left operand.`
   ),
-  // TODO: Find a nicer 'symbol' for rrlte, or better yet, incorporate it into the dice roll functionality!
-  splitExpr('Reroll (If Less Than Or Equal To)', '@rrlte', /@rrlte:/, 2, NoPF,
-    (state, ctx) => {
-      let droll = ctx.subExpressions[0].eval(state);
-      if (droll <= ctx.subExpressions[1].eval(state)) {
-        return ctx.subExpressions[0].eval(state)
-      }
-      return droll;
-    },
-    `Outputs the left operand, unless it is less than or equal to the right \
-operand, in which case it will be re-evaluated (rerolled) once. For example, \
-Great Weapon Fighting with a greataxe:
-  3+PB =atk> CM#(1d12 @rrlte: 2) + 3
-In the above, note the usage of the crit mult (CM) instead of the uppercase D \
-dice roll, because the rrlte function would combine the two dice on a crit \
-when using the uppercase D dice roll, so would only reroll a double 1.`
+  // TODO: Remove this at some point
+  splitExpr('Reroll (If Less Than Or Equal To)', '@rrlte:', /@rrlte:/, 2,
+    () => { throw new Error('@rrlte: has been removed; use the 2d6rrle2 syntax instead') },
+    () => { throw new Error('@rrlte: has been removed; use the 2d6rrle2 syntax instead') },
+    '',
   ),
 ];

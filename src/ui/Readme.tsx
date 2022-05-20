@@ -58,7 +58,7 @@ const Readme = () => (
     <Typography variant="h5" sx={{ mt: 4 }}>
       Value Expressions:
     </Typography>
-    {ValueExpressions.filter((e) => e.typeName !== 'Empty').map((expr) => (
+    {ValueExpressions.filter((e) => e.description).map((expr) => (
       <>
         <Typography fontWeight="bold" sx={{ mt: 2 }}>
           {expr.typeName}: {expr.sample}
@@ -69,7 +69,7 @@ const Readme = () => (
     <Typography variant="h5" sx={{ mt: 4 }}>
       Operator and Function Expressions:
     </Typography>
-    {SplitExpressions.map((expr) => (
+    {SplitExpressions.filter((e) => e.description).map((expr) => (
       <>
         <Typography fontWeight="bold" sx={{ mt: 2 }}>
           {expr.typeName}: {expr.sample}

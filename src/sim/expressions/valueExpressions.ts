@@ -22,25 +22,44 @@ function valueExpr<T>(
   });
 }
 
+type RollOp = (rolls: number[], param: number, dieSize: number) => number[] | void;
+const rollOperations: Record<string, RollOp> = {
+  kh: (rolls, param) => rolls.sort((a, b) => (b - a)).slice(0, param),
+  kl: (rolls, param) => rolls.sort((a, b) => (a - b)).slice(0, param),
+  rrle: (rolls, param, ds) => rolls.forEach((v, i, a) => { if (v <= param) a[i] = roll(ds); }),
+  rrlt: (rolls, param, ds) => rolls.forEach((v, i, a) => { if (v < param) a[i] = roll(ds); }),
+  rrge: (rolls, param, ds) => rolls.forEach((v, i, a) => { if (v >= param) a[i] = roll(ds); }),
+  rrgt: (rolls, param, ds) => rolls.forEach((v, i, a) => { if (v > param) a[i] = roll(ds); }),
+  rreq: (rolls, param, ds) => rolls.forEach((v, i, a) => { if (v === param) a[i] = roll(ds); }),
+};
+const rollOpRegex = Object.keys(rollOperations).join('|');
+
 export const ValueExpressions = [
   valueExpr('Number', 'X', /^\d+$/, (m) => ({ value: Number(m[0]) }), (s, { props }) => props.value,
   'Where X is any positive integer. Outputs the value of the integer.',
   ),
-  valueExpr('Roll Dice', 'XdY', /^(\d*)([dD])(\d+)(?:k(h|l)(\d+))?$/,
-    (m) => ({
-      crittable: m[2] === 'D',
-      dice: new Array(Number(m[1] || 1)).fill(Number(m[3])),
-      keep: (m[4] === 'l' ? -1 : 1) * Number(m[5]),
-    }),
+  valueExpr('Roll Dice', 'XdY', new RegExp(`^(\\d*)([dD])(\\d+)((?:(?:${rollOpRegex})\\d+)*)$`),
+    (m) => {
+      return ({
+        crittable: m[2] === 'D',
+        dieSize: Number(m[3]),
+        numDice: Number(m[1] || 1),
+        operations: [...m[4].matchAll(/([a-zA-Z]+)(\d+)/g)].map((om) => ({
+          operation: om[1],
+          param: Number(om[2]),
+        })),
+      });
+    },
     (s, { props }) => {
-      let rolls = props.dice.map(roll);
-      if (props.crittable && s.crit()) {
-        rolls.push(...props.dice.map(roll));
+      const { crittable, dieSize, numDice, operations } = props;
+      let rolls: number[] = [];
+      const numWithCrit = (crittable && s.crit()) ? 2 * numDice : numDice;
+      for (let i = 0; i < numWithCrit; i += 1) {
+        rolls.push(roll(dieSize));
       }
-      if (!Number.isNaN(props.keep)) {
-        rolls.sort((a, b) => (b - a) * Math.sign(props.keep));
-        rolls = rolls.slice(0, Math.abs(props.keep));
-      }
+      operations.forEach(({ operation, param }) => {
+        rolls = rollOperations[operation](rolls, param, dieSize) || rolls;
+      });
       return sum(rolls);
     },
     `Where X and Y are any positive integers. Outputs the sum of rolls with a \
@@ -54,7 +73,29 @@ dice rolled on a critical hit:
   3D8
 In the above, if the critical hit flag is set  (in the right operand of an \
 Attack where the attack roll was >= to the critical threshold), then an 8 sided \
-dice will be rolled 6 times.`
+dice will be rolled 6 times.
+
+Can also append additional modifier operations after the above basic rolls, \
+such as "keep highest":
+  3d8kh2
+The above rolls 3 d8s, and keeps the two highest rolls. To simulate the "Great \
+Weapon Fighting Style" you could instead use rrle:
+  2D6rrle2
+Which rolls 2 d6s (or 4 on a crit), and rerolls any 1s and 2s. Any number of \
+these operations can be appended, such as:
+  4d6kl2rrle2kh1
+Which rolls 4 d6s, then keeps the lowest 2, then rerolls any of the remaining 2 \
+that are 2 or less, then keeps the highest 1 of those remaining 2.
+
+The available modifier operations (where X is any positive integer) are:
+  khX: Keep the highest X dice
+  klX: Keep the lowest X dice
+  rrleX: Reroll (only once) any dice that are less than or equal to X
+  rrltX: Reroll (only once) any dice that are less than X
+  rrgeX: Reroll (only once) any dice that are greater than or equal to X
+  rrgtX: Reroll (only once) any dice that are greater than X
+  rreqX: Reroll (only once) any dice that are equal to X
+`
   ),
   valueExpr('Armor Class', 'AC', /^AC$/, NoPF, (s, ctx) => s.ac,
     'Outputs the armor class of the target the simulation is being run against.'
@@ -76,9 +117,7 @@ dice will be rolled 6 times.`
     `Outputs 1 if critical flag is set (in the right operand of an Attack where \
 the attack roll was >= to the critical threshold), otherwise 0.`
   ),
-  valueExpr('Empty', '', /^$/, NoPF, (s, ctx) => 0,
-    'A quirk of the parsing implementation. Ignore'
-  ),
+  valueExpr('Empty', '', /^$/, NoPF, (s, ctx) => 0, ''),
   valueExpr('Variable', '$X', /^\$([\d\w]+)$/,
     (m) => ({ varName: m[1] }),
     (s, ctx) => s.varReg.get(ctx.props.varName) || 0,
