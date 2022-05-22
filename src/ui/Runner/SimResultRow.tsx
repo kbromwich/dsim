@@ -7,6 +7,7 @@ import TableRow from '@mui/material/TableRow';
 
 import SimRun, { SimProgress } from './SimRun';
 import SimResult from 'sim/SimResult';
+import ResultHoverTarget from './ResultHoverTarget';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(0.5),
@@ -53,7 +54,7 @@ const NoTransitionProgress = styled(LinearProgress)(({ theme }) => ({
 
 const StatsCell = ({ simResult, setStatsView }: {
   simResult: SimResult,
-  setStatsView?: (view?: { simResult: SimResult, loc: React.RefObject<HTMLElement> }) => void;
+  setStatsView?: (view?: ResultHoverTarget) => void;
 }) => {
   const meanRef = React.useRef<HTMLDivElement>(null);
   const stdevRef = React.useRef<HTMLDivElement>(null);
@@ -62,7 +63,7 @@ const StatsCell = ({ simResult, setStatsView }: {
       <StyledTableCell
         align="right"
         className="mean"
-        onMouseEnter={() => setStatsView?.({ simResult, loc: meanRef })}
+        onMouseEnter={() => setStatsView?.({ simResult, elementRef: meanRef })}
         onMouseLeave={() => setStatsView?.()}
         ref={meanRef}
       >
@@ -71,7 +72,7 @@ const StatsCell = ({ simResult, setStatsView }: {
       <StyledTableCell
         align="right"
         className="stdev"
-        onMouseEnter={() => setStatsView?.({ simResult, loc: stdevRef })}
+        onMouseEnter={() => setStatsView?.({ simResult, elementRef: stdevRef })}
         onMouseLeave={() => setStatsView?.()}
         ref={stdevRef}
       >
@@ -86,7 +87,7 @@ interface Props {
   sims: SimRun[];
   showExpressions?: boolean;
   topDivider?: boolean;
-  onSetStatsView?: (view?: { simResult: SimResult, loc: React.RefObject<HTMLElement> }) => void;
+  onSetStatsView?: (view?: ResultHoverTarget) => void;
 }
 const SimResultRow: React.FC<Props> = ({ acValues, sims, showExpressions, onSetStatsView, topDivider }) => (
   <StyledTableRow className={topDivider ? 'topDivider' : undefined}  key={sims[0].simulation.id()}>
