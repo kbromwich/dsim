@@ -39,7 +39,13 @@ const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange
 
   const isRunning = state.status === 'running';
   return (
-    <Box sx={{ bgcolor: 'background.default' }}>
+    <Box sx={{
+      bgcolor: 'background.default',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 1,
+      p: 1,
+    }}>
       <SimConfiguration
         config={config}
         onChange={onConfigChange}

@@ -19,7 +19,13 @@ interface Props {
 const EditorSidebar: React.FC<Props> = ({ editStateSet, onSimsChange, sandboxMode }) => {
   const [state, setState] = editStateSet;
   return (
-    <Box sx={{ bgcolor: 'background.default' }}>
+    <Box sx={{
+      bgcolor: 'background.default',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 1,
+      p: 1,
+    }}>
       <Button
         disabled={state.editSims === undefined}
         onClick={() => {

@@ -28,12 +28,13 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
   const { levels, iterations, workers, acValues, dynamicAc, saveModOffset } = config;
   const acError = !(dynamicAc || acValues) || !!(acValues && !tryParseRanges(acValues));
   return (
-    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 2, }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, }}>
       <TextField
         error={!tryParseRanges(levels)}
         label="Levels"
         value={levels}
         onChange={(e) => onChange({ ...config, levels: e.target.value })}
+        size="small"
         title="Levels to simulate. Comma separated, and can be ranges; e.g. &quot;1,2,3-5,8-10&quot;"
       />
       <TextField
@@ -41,6 +42,7 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
         label="Armor Classes"
         value={acValues}
         onChange={(e) => onChange({ ...config, acValues: e.target.value })}
+        size="small"
         title="ACs to simulate. Comma separated, and can be ranges; e.g. &quot;10,12-15,18,20&quot;"
       />
       <FormControlLabel
@@ -55,6 +57,7 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
                 onChange({ ...config, dynamicAc: DynamicAC.SBCTH65 });
               }
             }}
+            size="small"
           />
         }
         title={DynamicACData[DynamicAC.SBCTH65].description}
@@ -64,6 +67,7 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
         label="Save Modifier AC Offset"
         value={saveModOffset}
         onChange={(e) => onChange({ ...config, saveModOffset: e.target.value })}
+        size="small"
         title={`Save modifier (SM) will be:
   SM = AC - x
 Where "x" is the offset specified here. Smaller values will make saves more
@@ -73,7 +77,7 @@ Setting this to a value of 14 will result in a 65% chance for saves to fail in a
 "standard build" when in combination with "Leveled AC: 65% Hit Chance".`}
       />
       <Box sx={{ px: 1 }}>
-        <Typography title="Number of iterations to perform for each simulation">
+        <Typography sx={{ mb: -1 }} title="Number of iterations to perform for each simulation">
           Accuracy: {iterLabels[iterations - 3]}
         </Typography>
         <Slider
@@ -85,11 +89,12 @@ Setting this to a value of 14 will result in a 65% chance for saves to fail in a
           valueLabelDisplay="auto"
           value={iterations}
           onChange={(e, value) => onChange({ ...config, iterations: value as number })}
+          sx={{ p: 0 }}
           title="Number of iterations to perform for each simulation"
         />
       </Box>
       <Box sx={{ px: 1 }}>
-        <Typography title="Number of worker threads to run simulations in parallel with">
+        <Typography sx={{ mb: -1 }} title="Number of worker threads to run simulations in parallel with">
           Workers: {workers === navigator.hardwareConcurrency ? 'Max' : workers}
         </Typography>
         <Slider
@@ -100,6 +105,7 @@ Setting this to a value of 14 will result in a 65% chance for saves to fail in a
           valueLabelDisplay="auto"
           value={workers}
           onChange={(e, value) => onChange({ ...config, workers: value as number })}
+          sx={{ p: 0 }}
           title="Number of worker threads to run simulations in parallel with"
         />
       </Box>
