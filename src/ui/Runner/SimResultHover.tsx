@@ -30,12 +30,12 @@ const SimResultHover: React.FC<Props> = ({ target: targetShare }) => {
   }, [sharedTarget]);
   return (
     <NoTouchPopper
-      anchorEl={target?.elementRef?.current}
+      anchorEl={target?.element}
       keepMounted
       placement='bottom'
-      open={show && !!target?.elementRef?.current}
+      open={show && !!target?.element}
     >
-      {target && (
+      {target && target.simResult.finished && target.simResult.stats && (
         <Paper elevation={6}>
           <SimResultDetails simResult={target.simResult} />
         </Paper>

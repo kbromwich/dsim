@@ -13,8 +13,8 @@ import { Line } from 'react-chartjs-2';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-import SimResult from 'sim/SimResult';
 import CodeBlock from 'ui/CodeBlock';
+import SimRun from './SimRun';
 
 ChartJS.register(
   CategoryScale,
@@ -26,10 +26,11 @@ ChartJS.register(
 );
 
 interface Props {
-  simResult: SimResult;
+  simResult: SimRun;
 }
 const SimResultDetails: React.FC<Props> = ({ simResult }) => {
   const { simParams, simulation, stats, dist } = simResult;
+  if (!stats || !dist) return <Typography>'Not finished yet.'</Typography>;
   const sortedDist = dist.entries().sort((a, b) => a[0] - b[0]);
   return (
     <Box sx={{ p: 2, minWidth: 400 }}>

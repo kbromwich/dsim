@@ -24,7 +24,7 @@ const Runner: React.FC<Props> = ({ runStateSet }) => {
             acValues={state.acValues}
             dynamicACs={state.dynamicACs}
             results={state.results}
-            fastRender={isRunning}
+            noSort={isRunning}
             showExpressions
           />
           {isRunning && (

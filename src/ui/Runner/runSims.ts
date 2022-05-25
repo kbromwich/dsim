@@ -2,7 +2,6 @@ import throttle from 'lodash.throttle';
 
 import calculateStats from 'sim/Stats';
 import { createSimParams } from 'sim/SimParams';
-import SimResult from 'sim/SimResult';
 import WorkerPool from 'worker/WorkerPool';
 
 import SimConfig from 'sim/SimConfig';
@@ -10,7 +9,7 @@ import { ParsedSims } from 'ui/useParsedSims';
 import { compressForUrl } from 'util/compression';
 import { tryParseRanges } from 'util/parseRanges';
 import iterationScale from 'util/iterationScale';
-import SimRun, { SimProgress } from './SimRun';
+import SimRun, { AverageDummyAc, AverageSimRun, MutableSimRun } from './SimRun';
 import { RunnerState } from './RunnerState';
 import { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 import parseIntStrict from 'util/parseIntStrict';
@@ -36,27 +35,35 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
     rawLevels: config.levels,
   });
   
-  const runs: SimRun[] = Object.values(sims.sims).flat()
+  const averages: AverageSimRun[] = [];
+  const runs: MutableSimRun[] = Object.values(sims.sims).flat()
     .filter((s) => selected.has(s.name) && levels.includes(s.level))
-    .map((sim): SimRun[] => {
+    .map((sim) => {
       const dacAcs = dacCalcs.map((calc) => calc(sim.level));
-      return [...new Set([...acValues, ...dacAcs])].map((ac) => ({
-        simulation: sim,
-        simParams: createSimParams(sim.level, ac, smOffset),
-        maxProgress: 0,
-        minProgress: 0,
-        updateTime: 0,
-        error: sim.error,
-      }))
+      const simLevelAcs = [...new Set([...acValues, ...dacAcs])].map((ac) => {
+        const run = new MutableSimRun(sim, createSimParams(sim.level, ac, smOffset));
+        if (sim.error) {
+          run.setToErrored(sim.error);
+        }
+        return run;
+      });
+      averages.push(new AverageSimRun(
+        sim,
+        createSimParams(sim.level, AverageDummyAc, NaN),
+        simLevelAcs,
+      ));
+      return simLevelAcs;
     }).flat();
+  const results = [...runs, ...averages];
   setState({
     compressedSimDefs: compressForUrl([...new Set(
       runs.map((r) => r.simulation.simDefinition)
     )].join('\n')),
+    results,
   });
 
   for (let i = 0; i < runs.length; i += 1) {
-    const run = runs[i] as SimProgress;
+    const run = runs[i];
     if (run.error) {
       continue;
     }
@@ -66,15 +73,10 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
         config: run.simParams,
       };
       const onProgress = throttle((max: number, min: number) => {
-        if ('maxProgress' in run) {
-          run.maxProgress = max;
-          run.minProgress = min;
-          run.updateTime = +new Date();
-          setState({ results: runs });
-        }
+        run.setProgress(max, min);
       }, 30, { leading: true });
       const dist = await pool.run(workerConfig, iterations, onProgress);
-      runs[i] = new SimResult(run.simulation, run.simParams, calculateStats(dist), dist);
+      run.setToComplete(calculateStats(dist), dist);
     } catch (e) {
       run.error = String(e);
       if (run.error === 'Terminated') {
@@ -87,7 +89,7 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
   }
 
   setState({
-    results: runs,
+    results,
     status: pool.isTerminated() ? 'canceled' : 'completed',
     time: +new Date() - startTime,
   });

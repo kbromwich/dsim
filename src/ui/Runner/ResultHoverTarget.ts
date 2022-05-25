@@ -1,6 +1,6 @@
-import SimResult from 'sim/SimResult';
+import SimRun from './SimRun';
 
 export default interface ResultHoverTarget {
-  simResult: SimResult;
-  elementRef: React.RefObject<HTMLElement>;
+  simResult: SimRun;
+  element: HTMLElement;
 }
