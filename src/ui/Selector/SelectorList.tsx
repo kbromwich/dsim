@@ -1,19 +1,13 @@
 import React from 'react';
+import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import AutoSizer from "react-virtualized-auto-sizer";
 
-import Checkbox from '@mui/material/Checkbox';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
+import Box from '@mui/material/Box';
 import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
+import Typography from '@mui/material/Typography';
 
 import Simulation from 'sim/Simulation';
-import CodeBlock from 'ui/CodeBlock';
+import SelectorItem, { SelectorItemHeight } from './SelectorItem';
 
 const toggleSetItem = (nameSet: Set<string>, simName: string) => {
   const newSelected = new Set(nameSet);
@@ -27,60 +21,70 @@ const toggleSetItem = (nameSet: Set<string>, simName: string) => {
 
 interface Props {
   sims: Record<string, Simulation[]>;
+  searched?: Set<string>;
   selected: Set<string>;
   onSelectedChange: (sims: Set<string>) => void;
-  onExpandedChange: (sims: Set<string>) => void;
-  expandedSims: Set<string>;
 }
 
-const SelectorList: React.FC<Props> = ({ sims, selected, onSelectedChange, onExpandedChange, expandedSims }) => (
-  <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-    {Object.keys(sims).map((simName) => (
-      <ListItem
-        key={simName}
-        disablePadding
-      >
-        <ListItemButton
-          dense
-          onClick={() => onSelectedChange(toggleSetItem(selected, simName))}
+const SelectorList: React.FC<Props> = ({ sims, searched, selected, onSelectedChange }) => {
+  const simNames = Object.keys(sims);
+  const primaryNames: string[] = [];
+  const secondaryNames: string[] = [];
+  simNames.forEach((simName) => {
+    if (!searched || searched.has(simName)) {
+      primaryNames.push(simName);
+    } else if(selected.has(simName)) {
+      secondaryNames.push(simName);
+    }
+  });
+  const numExtras = secondaryNames.length ? secondaryNames.length + 1 : 0;
+  
+  const Row = ({ index, style }: ListChildComponentProps) => {
+    let simName: string;
+    if (index < primaryNames.length) {
+      simName = primaryNames[index];
+    } else if (index > primaryNames.length) {
+      simName = secondaryNames[index - (primaryNames.length + 1)];
+    } else {
+      return (
+        <ListItem
+          key="nonSearchSelBreak"
+          style={style}
+          sx={{ height: SelectorItemHeight }}
         >
-          <ListItemIcon>
-            <Checkbox
-              edge="start"
-              checked={selected.has(simName)}
-              tabIndex={-1}
-              disableRipple
-            />
-          </ListItemIcon>
-          <ListItemText
-            primary={
-              <>
-                {simName}
-                <IconButton
-                  edge="end"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onExpandedChange(toggleSetItem(expandedSims, simName));
-                  }}
-                >
-                  {expandedSims?.has(simName) ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
-              </>
-            }
-            secondary={
-              <Collapse in={expandedSims?.has(simName)} unmountOnExit>
-                <CodeBlock>{
-                  sims[simName].map((s) => s.simDefinition)
-                    .filter((s, i, a) => s !== a[i - 1]).join('\n')
-                }</CodeBlock>
-              </Collapse>
-            }
-          />
-        </ListItemButton>
-      </ListItem>
-    ))}
-  </List>
-);
+          <Typography sx={{ mx: 2, mt: 2, fontStyle: 'italic' }} variant="body2">
+            The following simulations are currently selected but don't match the search:
+          </Typography>
+        </ListItem>
+      );
+    }
+    return (
+      <SelectorItem
+        sims={sims[simName]}
+        style={style}
+        selected={selected.has(simName)}
+        onToggle={() => onSelectedChange(toggleSetItem(selected, simName))}
+      />
+    );
+  };
+
+  return (
+    <Box sx={{ flex: '1 1 auto' }}>
+      <AutoSizer>
+        {({ height, width }) => (
+          <FixedSizeList
+            height={height}
+            itemCount={primaryNames.length + numExtras}
+            itemSize={SelectorItemHeight}
+            width={width}
+            itemData
+          >
+            {Row}
+          </FixedSizeList>
+        )}
+      </AutoSizer>
+    </Box>
+  );
+};
 
 export default SelectorList;

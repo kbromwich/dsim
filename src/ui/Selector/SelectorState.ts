@@ -20,8 +20,10 @@ export const useSelectorState = (
     expandedSims: new Set(),
   });
   React.useEffect(() => {
-    const cleaned = Object.keys(sims.sims).filter((name) => selected.has(name));
-    onSelectedChange(new Set(cleaned));
+    if (Object.keys(sims.sims).length) {
+      const cleaned = Object.keys(sims.sims).filter((name) => selected.has(name));
+      onSelectedChange(new Set(cleaned));
+    }
 
   // We ONLY want to trigger when sims changes!
   // eslint-disable-next-line react-hooks/exhaustive-deps
