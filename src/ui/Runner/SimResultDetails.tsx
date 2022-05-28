@@ -33,9 +33,9 @@ const SimResultDetails: React.FC<Props> = ({ simResult }) => {
   if (!stats || !dist) return <Typography>'Not finished yet.'</Typography>;
   const sortedDist = dist.entries().sort((a, b) => a[0] - b[0]);
   return (
-    <Box sx={{ p: 2, minWidth: 400 }}>
-      <Typography>{simulation.name}</Typography>
-      <CodeBlock>{simulation.rawExpression}</CodeBlock>
+    <Box sx={{ p: 2, width: 400 }}>
+      <Typography fontWeight="bold">{simulation.name}</Typography>
+      <CodeBlock sx={{ whiteSpace: 'pre-wrap' }}>{simulation.rawExpression}</CodeBlock>
       <Box sx={{ display: 'flex', gap: 3 }}>
         <Typography>
           <b>Level:</b> {simParams.level}<br/>

@@ -10,3 +10,10 @@ export const arrayBinned = <T>(arr: T[], binner: (item: T) => string): Record<st
   });
   return bins;
 };
+
+export const arrayUnique = <T>(arr: T[], keyGetter?: (item: T) => string): T[] => {
+  if (!keyGetter) {
+    return [...new Set(arr)];
+  }
+  return [...new Map(arr.map((v) => [keyGetter(v), v])).values()];
+};

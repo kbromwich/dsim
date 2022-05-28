@@ -8,8 +8,9 @@ import IconButton from '@mui/material/IconButton';
 
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import WarningIcon from '@mui/icons-material/Warning';
 
-import { arrayBinned } from 'util/arrays';
+import { arrayBinned, arrayUnique } from 'util/arrays';
 import parseIntStrict from 'util/parseIntStrict';
 import DynamicAC, { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 
@@ -41,6 +42,11 @@ const StyledTable = styled(BaseTable)(() => ({
   },
   '& .levelBreak': {
     borderBottom: '2px solid rgba(224, 224, 224, 1)',
+  },
+  '& .cellText span': {
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
 })) as unknown as new () => BaseTable<RowData>;
 
@@ -164,6 +170,22 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
       sortable: true,
       title: 'Simulation',
       width: nameWidth,
+      className: 'cellText borderedCell',
+      cellRenderer: ({ cellData, rowData }) => {
+        const warnings = arrayUnique(rowData.runs.map((r) => r.warnings).flat());
+        return (
+          <>
+            {!!warnings.length &&  (
+              <span className="hover" title={[cellData, ...warnings].join('\n')}>
+                <WarningIcon fontSize="small" color="warning" />
+              </span>
+            )}
+            <span title={[cellData, ...warnings].join('\n')}>
+              {cellData}
+            </span>
+          </>
+        );
+      },
     },
     {
       key: 'level',
@@ -190,6 +212,8 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
       dataGetter: ({ rowData }) => rowData.runs[0].simulation.rawExpression,
       width: expressionWidth,
       flexGrow: 1,
+      className: 'cellText',
+      cellRenderer: ({ cellData }) => <span title={cellData}>{cellData}</span>,
     }] as CustomColumnShape[] : []),
   ] as CustomColumnShape[]).map((c) => ({
     className: 'borderedCell', headerClassName: 'borderedCell', ...c,
@@ -217,12 +241,16 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
                   </IconButton>
                 </GroupCell>,
                 ...acValues.map((ac) => <GroupCell key={`ac.${ac}`} style={{ width: valueWidth * 2 }}>AC {ac}</GroupCell>),
-                ...dynamicACs.map((dac) => <GroupCell key={`ac.${dac}`} style={{ width: valueWidth * 2 }}>{DynamicACData[dac].displayName}</GroupCell>),
+                ...dynamicACs.map((dac) => (
+                  <GroupCell key={`ac.${dac}`} style={{ width: valueWidth * 2 }} title={DynamicACData[dac].description}>
+                    {DynamicACData[dac].displayName}
+                  </GroupCell>
+                )),
                 showAverage && <GroupCell key="average" style={{ width: valueWidth * 2 }}>Average</GroupCell>,
                 showExpressions && <GroupCell key="expression" style={{ width: expressionWidth }}></GroupCell>,
               ].filter(Boolean);
             }}
-            cellProps={({ columnIndex, rowData, rowIndex }) => ({
+            cellProps={({ columnIndex, rowData }) => ({
               onMouseEnter: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
                 const simResult = columns[columnIndex].runGetter?.(rowData.runs);
                 if (simResult) {
@@ -239,7 +267,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
                   return 'levelBreak';
                 }
               }
-              return 'whaaat';
+              return '';
             }}
             onColumnSort={(sortBy) => {
               if (lockLevelSort && sortBy.key === 'level') {

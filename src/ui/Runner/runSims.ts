@@ -9,10 +9,24 @@ import { ParsedSims } from 'ui/useParsedSims';
 import { compressForUrl } from 'util/compression';
 import { tryParseRanges } from 'util/parseRanges';
 import iterationScale from 'util/iterationScale';
-import SimRun, { AverageDummyAc, AverageSimRun, MutableSimRun } from './SimRun';
+import { AverageDummyAc, AverageSimRun, MutableSimRun } from './SimRun';
 import { RunnerState } from './RunnerState';
 import { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 import parseIntStrict from 'util/parseIntStrict';
+
+const dedupeSims = (runs: MutableSimRun[]): MutableSimRun[] => {
+  const unique = new Map<string, MutableSimRun>();
+  runs.forEach((run) => {
+    const key = `${run.simulation.name}|${run.simParams.level}|${run.simParams.ac}`;
+    const usim = unique.get(key);
+    if (!usim) {
+      unique.set(key, run);
+    } else {
+      usim.warnings.push('Duplicate definitions found for this simulation; only the first is used.');
+    }
+  });
+  return [...unique.values()];
+};
 
 const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string>, setState: (runState: Partial<RunnerState>) => void) => {
   const acValues = tryParseRanges(config.acValues) || [];
@@ -32,28 +46,34 @@ const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string
     dynamicACs,
     rawAcValues: config.acValues,
     rawDynamicAc: config.dynamicAc,
+    rawSaveModOffset: config.saveModOffset,
     rawLevels: config.levels,
   });
   
   const averages: AverageSimRun[] = [];
-  const runs: MutableSimRun[] = Object.values(sims.sims).flat()
-    .filter((s) => selected.has(s.name) && levels.includes(s.level))
-    .map((sim) => {
-      const dacAcs = dacCalcs.map((calc) => calc(sim.level));
-      const simLevelAcs = [...new Set([...acValues, ...dacAcs])].map((ac) => {
-        const run = new MutableSimRun(sim, createSimParams(sim.level, ac, smOffset));
-        if (sim.error) {
-          run.setToErrored(sim.error);
-        }
-        return run;
-      });
-      averages.push(new AverageSimRun(
-        sim,
-        createSimParams(sim.level, AverageDummyAc, NaN),
-        simLevelAcs,
-      ));
-      return simLevelAcs;
-    }).flat();
+  const selectedNameSims = Object.values(sims.sims)
+    .filter((nameSims) => selected.has(nameSims[0].name));
+
+  const runs = selectedNameSims.map((sims) => {
+    const selectedLevelSims = sims.filter((s) => levels.includes(s.level));
+    return dedupeSims(selectedLevelSims.map((sim) => {
+        const dacAcs = dacCalcs.map((calc) => calc(sim.level));
+        const simLevelAcs = [...new Set([...acValues, ...dacAcs])].map((ac) => {
+          const run = new MutableSimRun(sim, createSimParams(sim.level, ac, smOffset));
+          if (sim.error) {
+            run.setToErrored(sim.error);
+          }
+          return run;
+        });
+        averages.push(new AverageSimRun(
+          sim,
+          createSimParams(sim.level, AverageDummyAc, NaN),
+          simLevelAcs,
+        ));
+        return simLevelAcs;
+      }).flat());
+  }).flat();
+
   const results = [...runs, ...averages];
   setState({
     compressedSimDefs: compressForUrl([...new Set(

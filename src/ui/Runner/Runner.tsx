@@ -25,7 +25,7 @@ const Runner: React.FC<Props> = ({ runStateSet }) => {
               acValues={state.acValues}
               dynamicACs={state.dynamicACs}
               results={state.results}
-            noSort={isRunning}
+              noSort={isRunning}
               showExpressions
             />
           </Box>

@@ -14,6 +14,7 @@ class SimRun {
   maxProgress: number;
   minProgress: number;
   updateTime: number;
+  warnings: string[];
   
   error?: string;
   stats?: Stats;
@@ -29,6 +30,7 @@ class SimRun {
     this.maxProgress = 0;
     this.minProgress = 0;
     this.updateTime = 0;
+    this.warnings = [];
 
     this.observers = new Set();
   }
