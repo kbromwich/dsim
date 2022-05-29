@@ -274,7 +274,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
                 const { level, ...others } = orderBy;
                 setOrderBy({ level: sortBy.order, ...others });
               } else if (lockLevelSort) {
-                setOrderBy({ level: sortBy.order, [sortBy.key]: sortBy.order });
+                setOrderBy({ level: orderBy.level, [sortBy.key]: sortBy.order });
               } else {
                 setOrderBy({ [sortBy.key]: sortBy.order });
               }
