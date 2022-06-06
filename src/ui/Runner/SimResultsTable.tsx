@@ -48,6 +48,11 @@ const StyledTable = styled(BaseTable)(() => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
+  '& .expression': {
+    // Need this because the table ignores flexGrow for whatever reason;
+    // maybe because it's a "fixed" table?
+    flex: '1 0 auto !important',
+  },
 })) as unknown as new () => BaseTable<RowData>;
 
 const GroupCell = styled('div')(() => ({
@@ -211,8 +216,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
       title: 'Simulation Expression',
       dataGetter: ({ rowData }) => rowData.runs[0].simulation.rawExpression,
       width: expressionWidth,
-      flexGrow: 1,
-      className: 'cellText',
+      className: 'cellText expression',
       cellRenderer: ({ cellData }) => <span title={cellData}>{cellData}</span>,
     }] as CustomColumnShape[] : []),
   ] as CustomColumnShape[]).map((c) => ({
