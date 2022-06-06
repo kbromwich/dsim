@@ -5,7 +5,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import examples from 'sim/examples';
-import { SplitExpressions } from 'sim/expressions/splitExpressions';
+import { SplitExpressions } from 'sim/expressions/splitOperatorExpressions';
+import { UnaryExpressions } from 'sim/expressions/unaryOperatorExpressions';
 import { ValueExpressions } from 'sim/expressions/valueExpressions';
 import CodeBlock from './CodeBlock';
 
@@ -69,7 +70,7 @@ const Readme = () => (
     <Typography variant="h5" sx={{ mt: 4 }}>
       Operator and Function Expressions:
     </Typography>
-    {SplitExpressions.filter((e) => e.description).map((expr) => (
+    {[...UnaryExpressions, ...SplitExpressions].filter((e) => e.description).map((expr) => (
       <>
         <Typography fontWeight="bold" sx={{ mt: 2 }}>
           {expr.typeName}: {expr.sample}

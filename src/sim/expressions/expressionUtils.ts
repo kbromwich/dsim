@@ -1,5 +1,4 @@
 const NoPF = () => ({});
-const NoMax = 999;
 
 let randomFunction = Math.random;
 const sum = (values: number[]) => values.reduce((prev, cur) => prev + cur, 0);
@@ -9,6 +8,6 @@ export const exportedForTesting = {
   setRandomFunction: (func: () => number) => randomFunction = func,
 };
 
-const expressionUtils = { NoPF, NoMax, sum, roll };
+const expressionUtils = { NoPF, sum, roll };
 
 export default expressionUtils;

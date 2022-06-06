@@ -37,7 +37,6 @@ function testRngExpr(rawExpr: string, runs: number, acc: number, stateOverride?:
   };
 }
 
-// Value expressions
 describe('number', () => {
   it('produces correct output for integers', () => {
     expect(testExpr('5')).toEqual(5);
@@ -53,19 +52,19 @@ describe('number', () => {
 });
 
 describe('roll', () => {
-  it.skip('(regression) produces correct output for some standard dice', () => {
+  it('(regression) produces correct output for some standard dice', () => {
     expect(testRngExpr('1d4', 100, 1)).toEqual({ min: '1.0', max: '4.0', mean: '2.5', stdev: '1.1' });
     expect(testRngExpr('1d8', 100, 1)).toEqual({ min: '1.0', max: '8.0', mean: '4.6', stdev: '2.4' });
     expect(testRngExpr('1d20', 100, 1)).toEqual({ min: '1.0', max: '20.0', mean: '10.7', stdev: '6.1' });
   });
-  it.skip('(regression) produces correct output for keep lowest/highest', () => {
+  it('(regression) produces correct output for keep lowest/highest', () => {
     expect(testRngExpr('1d4kl1', 100, 1)).toEqual({ min: '1.0', max: '4.0', mean: '2.5', stdev: '1.1' });
     expect(testRngExpr('1d4kh1', 100, 1)).toEqual({ min: '1.0', max: '4.0', mean: '2.5', stdev: '1.1' });
     expect(testRngExpr('2d20kh1', 100, 1)).toEqual({ min: '2.0', max: '20.0', mean: '14.2', stdev: '4.7' });
     expect(testRngExpr('2d20kl1', 100, 1)).toEqual({ min: '1.0', max: '19.0', mean: '6.6', stdev: '4.5' });
     expect(testRngExpr('4d20kl2', 100, 1)).toEqual({ min: '3.0', max: '35.0', mean: '12.2', stdev: '6.3' });
   });
-  it.skip('(regression) produces correct output for rrle/rrlt/rrge/rreq', () => {
+  it('(regression) produces correct output for rrle/rrlt/rrge/rreq', () => {
     expect(testRngExpr('2d6rrle2', 100, 1)).toEqual({ min: '4.0', max: '12.0', mean: '8.4', stdev: '2.0' });
     expect(testRngExpr('1d12rrle2', 100, 1)).toEqual({ min: '1.0', max: '12.0', mean: '7.8', stdev: '3.1' });
     expect(testRngExpr('2d6rrlt3', 100, 1)).toEqual({ min: '4.0', max: '12.0', mean: '8.4', stdev: '2.0' });
@@ -131,12 +130,6 @@ describe('crit_binary', () => {
     expect(testExpr('CB', { critStack: [true] })).toEqual(1);
     expect(testExpr('CB', { critStack: [true, false] })).toEqual(0);
     expect(testExpr('CB', { critStack: [false, true] })).toEqual(1);
-  });
-});
-
-describe('empty', () => {
-  it('evaluates to 0', () => {
-    expect(testExpr('')).toEqual(0);
   });
 });
 

@@ -16,6 +16,7 @@ interface ExpressionParams<T> {
 export default class ExpressionCreator<T> {
   typeName: string;
   regex: RegExp;
+  globalRegex: RegExp;
   parseFunc: ParseFunc<T>;
   evalFunc: EvalFunc<T>;
   min: number; 
@@ -26,6 +27,8 @@ export default class ExpressionCreator<T> {
   constructor(params: ExpressionParams<T>) {
     this.typeName = params.typeName;
     this.regex = params.regex;
+    const gFlags = params.regex.flags ? `${params.regex.flags}g` : 'g';
+    this.globalRegex = new RegExp(params.regex.source, gFlags);
     this.parseFunc = params.parseFunc
     this.evalFunc = params.evalFunc;
     this.min = params.minSubExprs || 0; 
@@ -35,21 +38,11 @@ export default class ExpressionCreator<T> {
     this.description = params.description;
   }
 
-  create(expr: string, subExprs: Expression[]) {
+  create(expr: string, subExprs: Expression[], match: RegExpExecArray) {
     if ((this.min && subExprs.length < this.min) || (this.max && subExprs.length > this.max)) {
       throw Error(`Invalid syntax in "${expr}": ${this.typeName} expected between ${this.min} and ${this.max} operands but got ${subExprs.length}`);
     }
-    let matches: RegExpExecArray | null;
-    // This is pretty hacky, but works for now...
-    if (subExprs.length > 0) {
-      matches = this.regex.exec(expr.substring(subExprs[0].rawExpression.length));
-    } else {
-      matches = this.regex.exec(expr);
-    }
-    if (!matches) {
-      throw new Error(`Unexpected match failure for ${this.typeName} in "${expr}"`);
-    }
-    const props: T = this.parseFunc(matches, subExprs);
+    const props: T = this.parseFunc(match, subExprs);
     return new Expression(this.typeName, expr, subExprs, this.evalFunc, props);
   }
 }

@@ -25,4 +25,4 @@ describe('parseSimDef', () => {
     parseSimDef('GreatSword with GreatWeaponFighting@1: 3+PB =atk> CM#(2#(1d6 @rrlte: 2)) + 3');
     parseSimDef('Dual Wield with a Sneak Attack@1: ($a := (3+PB =atk> 1D6+3 + 1D6)) + (3+PB =atk> 1D6 + ($a<=0 => 1D6)) + $a');
   })
-})
+});

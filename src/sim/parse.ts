@@ -1,13 +1,21 @@
 import parseRanges from 'util/parseRanges';
 import Expression from './expressions/Expression';
-import { SplitExpressions } from './expressions/splitExpressions';
+import ExpressionCreator from './expressions/ExpressionCreator';
+import { SplitExpressions } from './expressions/splitOperatorExpressions';
+import { UnaryExpressions } from './expressions/unaryOperatorExpressions';
 import { ValueExpressions } from './expressions/valueExpressions';
 import SimState from './SimState';
 import Simulation from './Simulation';
 
-function regexMatchAt(regex: RegExp, str: string, index: number): string | undefined {
-  const m = regex.exec(str.substring(index));
-  return (m?.index === 0 || undefined) && m?.[0];
+const operatorExpressions = [...SplitExpressions, ...UnaryExpressions];
+
+function matchAt(matches: RegExpMatchArray[], index: number): RegExpExecArray | null {
+  for (let i = 0; i < matches.length; i++) {
+    if (matches[i].index === index) {
+      return matches[i] as RegExpExecArray;
+    }
+  }
+  return null;
 }
 
 function appendChunk(result: string[], chunk: string, resets: number) {
@@ -17,14 +25,22 @@ function appendChunk(result: string[], chunk: string, resets: number) {
   result.push(chunk);
 }
 
-function splitExpr(expr: string, opRegex: RegExp): [string[], number] {
+function splitExpr(
+  expr: string, opRegex: ExpressionCreator<any>,
+): [string[], RegExpExecArray | null, number] {
+  const matches = [...expr.matchAll(opRegex.globalRegex)];
+  if (!matches.length) {
+    return [[], null, 0];
+  }
+
   const result: string[] = [];
   let braces = 0;
   let currentChunk = '';
   let chunkParensResets = 0;
+  let opMatch: RegExpExecArray | null = null;
   let i = 0;
   while (i < expr.length) {
-    const curChar = expr[i]
+    const curChar = expr[i];
     if (curChar === '(') {
       braces += 1;
     } else if (curChar === ')') {
@@ -33,38 +49,41 @@ function splitExpr(expr: string, opRegex: RegExp): [string[], number] {
         chunkParensResets += 1;
       }
     }
-    const opMatch = regexMatchAt(opRegex, expr, i)
-    if (braces === 0 && opMatch) {
+    if (braces === 0 && !opMatch) {
+      opMatch = matchAt(matches, i);
+      if (opMatch) {
         appendChunk(result, currentChunk, chunkParensResets);
         currentChunk = '';
         chunkParensResets = 0;
-        i += opMatch.length;
-    } else {
-      currentChunk += curChar;
-      i += 1;
+        i += opMatch[0].length;
+        continue;
+      }
     }
+    currentChunk += curChar;
+    i += 1;
   }
   if (braces !== 0) {
     throw Error(`Unbalanced parentheses in expression "${expr}"`);
   }
-  appendChunk(result, currentChunk, chunkParensResets)
-  return [result, chunkParensResets]
+  appendChunk(result, currentChunk, chunkParensResets);
+  return [result.filter(Boolean), opMatch, chunkParensResets];
 }
 
 export function parseSimExpr(rawExpr: string): Expression {
-  for (let exprCreator of SplitExpressions) {
-    const [parts, parensGroups] = splitExpr(rawExpr, exprCreator.regex)
+  for (let exprCreator of operatorExpressions) {
+    const [parts, opMatch, parensGroups] = splitExpr(rawExpr, exprCreator)
     if (parts.length === 1 && parensGroups === 1 && rawExpr.startsWith('(') && rawExpr.endsWith(')')) {
-      return parseSimExpr(parts[0])
+      return parseSimExpr(parts[0]);
     }
-    if (parts.length > 1) {
-      return exprCreator.create(rawExpr, parts.map(parseSimExpr)) as Expression;
+    if (opMatch && parts.length >= exprCreator.min) {
+      return exprCreator.create(rawExpr, parts.map(parseSimExpr), opMatch) as Expression;
     }
   }
 
   for (let exprCreator of ValueExpressions) {
-    if (exprCreator.regex.exec(rawExpr)) {
-      return exprCreator.create(rawExpr, []) as Expression;
+    const match = exprCreator.regex.exec(rawExpr);
+    if (match) {
+      return exprCreator.create(rawExpr, [], match) as Expression;
     }
   }
 
