@@ -30,8 +30,16 @@ interface Props {
 }
 const SimResultDetails: React.FC<Props> = ({ simResult }) => {
   const { simParams, simulation, stats, dist } = simResult;
-  if (!stats || !dist) return <Typography>'Not finished yet.'</Typography>;
-  const sortedDist = dist.entries().sort((a, b) => a[0] - b[0]);
+  if (!stats || !dist) {
+    return <Typography>Not finished yet.</Typography>;
+  }
+  const values = dist.uniqueValues();
+  const maxValue = Math.max(...values);
+  const minValue = Math.min(...values);
+  const sortedDist = [];
+  for (let i = minValue; i <= maxValue; i += 1) {
+    sortedDist.push([i, dist.getCount(i)]);
+  }
   return (
     <Box sx={{ p: 2, width: 400 }}>
       <Typography fontWeight="bold">{simulation.name}</Typography>

@@ -7,10 +7,12 @@ class Distribution {
     this.sumTotal = (entries || []).reduce((sum, [, count]) => sum + count, 0);
   }
 
+  /** Returns the number of values (with count > 0) */
   uniqueCount() {
     return this.map.size;
   }
 
+  /** Returns the total sum of counts across all values */
   totalCount() {
     return this.sumTotal;
   }
@@ -21,6 +23,10 @@ class Distribution {
 
   uniqueValues() {
     return [...this.map.keys()];
+  }
+
+  getCount(value: number) {
+    return this.map.get(value) || 0;
   }
 
   static merge(...dists: Distribution[]) {
