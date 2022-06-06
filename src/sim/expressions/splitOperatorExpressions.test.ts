@@ -189,7 +189,7 @@ describe('attack', () => {
     expect(testFixedRngExpr(20, '3=atk>10', { ac: 25 })).toEqual(10);
     expect(testFixedRngExpr(20, '1=atk>10', { ac: 30 })).toEqual(10);
   });
-  it.skip('resolves to 0 when on a nat 1 regardless of total vs AC', () => { // TODO: Fix this case!
+  it('resolves to 0 when on a nat 1 regardless of total vs AC', () => {
     expect(testFixedRngExpr(1, '5=atk>10')).toEqual(0);
     expect(testFixedRngExpr(1, '9=atk>10')).toEqual(0);
     expect(testFixedRngExpr(1, '20=atk>10', { ac: 1 })).toEqual(0);
@@ -374,6 +374,8 @@ describe('add', () => {
     expect(testExpr('0+1')).toEqual(1);
     expect(testExpr('123+321')).toEqual(444);
     expect(testExpr('-1+1')).toEqual(0);
+    expect(testExpr('1+-1')).toEqual(0);
+    expect(testExpr('-1+-1')).toEqual(-2);
     expect(testExpr('AC+PB')).toEqual(12);
   });
   it('adds two complex expressions together', () => {
@@ -404,6 +406,9 @@ describe('mul', () => {
     expect(testExpr('2*3')).toEqual(6);
     expect(testExpr('AC*PB')).toEqual(20);
     expect(testExpr('(0=>1)*(1=>1)')).toEqual(0);
+    expect(testExpr('2*-3')).toEqual(-6);
+    expect(testExpr('-2*3')).toEqual(-6);
+    expect(testExpr('-2*-3')).toEqual(6);
   });
 });
 
@@ -411,7 +416,7 @@ describe('div', () => {
   it('divides the first expr by the second expr', () => {
     expect(testExpr('6/2')).toEqual(3);
     expect(testExpr('AC/PB')).toEqual(5);
-    // expect(testExpr('6/-2')).toEqual(-3); // TODO: Fix this case!
+    expect(testExpr('6/-2')).toEqual(-3);
   });
 });
 

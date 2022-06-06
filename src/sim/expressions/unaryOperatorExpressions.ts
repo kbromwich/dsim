@@ -15,8 +15,7 @@ function unaryExpr<T>(
   return new ExpressionCreator({
     typeName,
     regex,
-    minSubExprs: 1,
-    maxSubExprs: 1,
+    numOperands: 1,
     parseFunc,
     evalFunc,
     description,

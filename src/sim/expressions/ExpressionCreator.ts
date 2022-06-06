@@ -5,8 +5,7 @@ export type ParseFunc<T> = (match: RegExpExecArray, subExprs: Expression[]) => T
 interface ExpressionParams<T> {
   typeName: string;
   regex: RegExp;
-  minSubExprs?: number;
-  maxSubExprs?: number;
+  numOperands?: number;
   parseFunc: ParseFunc<T>;
   evalFunc: EvalFunc<T>;
   sample: string;
@@ -19,8 +18,7 @@ export default class ExpressionCreator<T> {
   globalRegex: RegExp;
   parseFunc: ParseFunc<T>;
   evalFunc: EvalFunc<T>;
-  min: number; 
-  max: number;
+  numOperands: number; 
   sample: string;
   description: string;
 
@@ -31,16 +29,15 @@ export default class ExpressionCreator<T> {
     this.globalRegex = new RegExp(params.regex.source, gFlags);
     this.parseFunc = params.parseFunc
     this.evalFunc = params.evalFunc;
-    this.min = params.minSubExprs || 0; 
-    this.max = params.maxSubExprs || 0;
+    this.numOperands = params.numOperands || 0; 
 
     this.sample = params.sample;
     this.description = params.description;
   }
 
   create(expr: string, subExprs: Expression[], match: RegExpExecArray) {
-    if ((this.min && subExprs.length < this.min) || (this.max && subExprs.length > this.max)) {
-      throw Error(`Invalid syntax in "${expr}": ${this.typeName} expected between ${this.min} and ${this.max} operands but got ${subExprs.length}`);
+    if ((this.numOperands && subExprs.length !== this.numOperands)) {
+      throw Error(`Invalid syntax in "${expr}": ${this.typeName} expected ${this.numOperands} operands but got ${subExprs.length}`);
     }
     const props: T = this.parseFunc(match, subExprs);
     return new Expression(this.typeName, expr, subExprs, this.evalFunc, props);

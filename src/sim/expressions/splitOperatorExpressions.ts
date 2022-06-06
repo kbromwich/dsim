@@ -16,8 +16,7 @@ function splitExpr<T>(
   return new ExpressionCreator({
     typeName,
     regex,
-    minSubExprs: 2,
-    maxSubExprs: 2,
+    numOperands: 2,
     parseFunc,
     evalFunc,
     description,
@@ -163,9 +162,10 @@ output 0. For example:
         const reducer = props.vantage > 0 ? Math.max : Math.min;
         droll = reducer(droll, ...rolls);
       }
-      const crit = droll >= props.critmin;
-      if (crit || (subExpressions[0].eval(state) + droll >= state.ac)) {
-        state.pushCrit(crit);
+      const critMiss = droll === 1;
+      const critHit = droll >= props.critmin;
+      if (!critMiss && (critHit || (subExpressions[0].eval(state) + droll >= state.ac))) {
+        state.pushCrit(critHit);
         const result = subExpressions[1].eval(state);
         state.popCrit();
         return result;
@@ -178,9 +178,11 @@ the result meets the AC then the output is the right operand. For example:
 The above is mostly equivalent to:
   (3+PB + 1d20 >= AC) => 1D6+3
 However, the =atk> operator also accounts for crits. If the d20 rolled for the \
-attack is a 20, then the critical hit flag is set (the number of dice rolled in \
-the 1D6 damage roll will then be doubled; note that the doubling of dice only \
-applies when the uppercase D is used. Using a lowercase d will not double dice).
+attack is a 1, then the attack will miss regardless of modifiers and AC. If the \
+d20 rolled for the attack is a 20, then the critical hit flag is set (the \
+number of dice rolled in the 1D6 damage roll will then be doubled; note that \
+the doubling of dice only applies when the uppercase D is used; using a \
+lowercase d will not double dice).
 
 Can also specify that the attack be made with advantage or disadvantage:
   3+PB =atk:adv> 1D6+3
@@ -271,7 +273,7 @@ should come first:
     (s, ctx) => sum(ctx.subExpressions.map((e) => e.eval(s))),
     'Outputs the sum of the left operand and right operand',
   ),
-  splitExpr('Subtract', '-', /-(?!>)/, NoPF,
+  splitExpr('Subtract', '-', /(?<![-+*/=><|&])-(?!>)/, NoPF,
     (s, ctx) => ctx.subExpressions[0].eval(s) - sum(ctx.subExpressions.slice(1).map((e) => e.eval(s))),
     'Outputs the result of subtracting the right operand from the left operand.',
   ),

@@ -26,9 +26,9 @@ function appendChunk(result: string[], chunk: string, resets: number) {
 }
 
 function splitExpr(
-  expr: string, opRegex: ExpressionCreator<any>,
+  expr: string, operator: ExpressionCreator<any>,
 ): [string[], RegExpExecArray | null, number] {
-  const matches = [...expr.matchAll(opRegex.globalRegex)];
+  const matches = [...expr.matchAll(operator.globalRegex)];
   if (!matches.length) {
     return [[], null, 0];
   }
@@ -49,7 +49,7 @@ function splitExpr(
         chunkParensResets += 1;
       }
     }
-    if (braces === 0 && !opMatch) {
+    if (braces === 0 && !opMatch && (operator.numOperands !== 2 || i > 0)) {
       opMatch = matchAt(matches, i);
       if (opMatch) {
         appendChunk(result, currentChunk, chunkParensResets);
@@ -75,7 +75,7 @@ export function parseSimExpr(rawExpr: string): Expression {
     if (parts.length === 1 && parensGroups === 1 && rawExpr.startsWith('(') && rawExpr.endsWith(')')) {
       return parseSimExpr(parts[0]);
     }
-    if (opMatch && parts.length >= exprCreator.min) {
+    if (opMatch && parts.length === exprCreator.numOperands) {
       return exprCreator.create(rawExpr, parts.map(parseSimExpr), opMatch) as Expression;
     }
   }
