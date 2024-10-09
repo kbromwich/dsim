@@ -8,10 +8,10 @@ import TextField from '@mui/material/TextField';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 
-import { ParsedSims } from 'ui/useParsedSims';
 import { SelectorStateSet } from './SelectorState';
 import search from './search';
 import SelectorList from './SelectorList';
+import { ParsedSims } from 'sim/ParsedSims';
 
 interface Props {
   sims: ParsedSims;

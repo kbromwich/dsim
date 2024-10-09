@@ -9,11 +9,11 @@ import { parseRawDynamicACs } from 'sim/DynamicAC';
 import { tryParseRanges } from 'util/parseRanges';
 import buildUrl from 'util/buildUrl';
 
-import { ParsedSims } from 'ui/useParsedSims';
 import SimConfiguration from 'ui/SimConfiguration';
 import { RunnerState, RunnerStateSet } from './RunnerState';
 import runSims from './runSims';
 import parseIntStrict from 'util/parseIntStrict';
+import { ParsedSims } from 'sim/ParsedSims';
 
 interface Props {
   sims: ParsedSims;

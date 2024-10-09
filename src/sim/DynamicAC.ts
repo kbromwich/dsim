@@ -24,7 +24,7 @@ export const DynamicACData: Record<DynamicAC, DynamicACDatum> = {
     displayName: 'SHC 65%',
     description: `"Standard Hit Chance": Level dependant AC calculated to be a
 65% chance to hit for a "standard build" at that level. ("standard build":
-primary stat 16 at level 1, 18 at level 4, 20 and level 8)
+primary stat 16 at level 1, 18 at level 4, 20 at level 8)
 Level => AC
 ${SBCTH65_AC.map((v, i) => `${i + 1} => ${v}`).join('\n')}
 `,

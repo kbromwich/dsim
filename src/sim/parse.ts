@@ -6,8 +6,13 @@ import { UnaryExpressions } from './expressions/unaryOperatorExpressions';
 import { ValueExpressions } from './expressions/valueExpressions';
 import SimState from './SimState';
 import Simulation from './Simulation';
+import { arrayBinned } from 'util/arrays';
+import stripComments from 'util/stripComments';
+import stripError from 'util/stripError';
+import { LineError, ParsedSims } from './ParsedSims';
 
-const operatorExpressions = [...SplitExpressions, ...UnaryExpressions];
+const OperatorExpressions = [...SplitExpressions, ...UnaryExpressions];
+const SimDefinitionRegex = /[^:#@]+@[- \t,\d]+:(.*)/;
 
 function matchAt(matches: RegExpMatchArray[], index: number): RegExpExecArray | null {
   for (let i = 0; i < matches.length; i++) {
@@ -70,7 +75,7 @@ function splitExpr(
 }
 
 export function parseSimExpr(rawExpr: string): Expression {
-  for (let exprCreator of operatorExpressions) {
+  for (let exprCreator of OperatorExpressions) {
     const [parts, opMatch, parensGroups] = splitExpr(rawExpr, exprCreator)
     if (parts.length === 1 && parensGroups === 1 && rawExpr.startsWith('(') && rawExpr.endsWith(')')) {
       return parseSimExpr(parts[0]);
@@ -91,7 +96,7 @@ export function parseSimExpr(rawExpr: string): Expression {
 }
 
 export function parseSimDef(simDef: string): Simulation[] {
-  const [nameLevel, expr] = simDef.split(/:(.*)/);
+  const [nameLevel, expr] = simDef.trim().split(/:(.*)/);
   if (!expr) {
     throw new Error(`Simulation definition "${simDef}" is not correctly formatted.`)
   }
@@ -140,4 +145,64 @@ export function parseTestSimDef(simDef: string): Simulation[] {
     throw new Error(firstError);
   }
   return sims;
+}
+
+export function parseSimDefsScript(simDefsScript: string): ParsedSims {
+  const errors: LineError[] = [];
+  const sims: Simulation[] = [];
+  const lines = simDefsScript.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const lineNum = i + 1;
+    const line = lines[i];
+    if (!stripComments(line).trim()) {
+      continue;
+    }
+    const match = SimDefinitionRegex.exec(line);
+    if (!match) {
+      errors.push({ line: lineNum, message: `Invalid name@level definition: "${line}"` });
+      continue;
+    }
+
+    let simDef = line;
+    if (match[1].includes('(')) {
+      let braces = 0;
+      let j = i;
+      let innerLine = match[1];
+      do {
+        if (!stripComments(line).trim()) {
+          continue;
+        }
+        if (SimDefinitionRegex.test(innerLine)) {
+          break;
+        }
+        for (let k = 0; k < innerLine.length; k++) {
+          const char = innerLine[k];
+          if (char === '(') {
+            braces += 1;
+          } else if (char === ')') {
+            braces -= 1;
+          }
+        }
+        j += 1;
+        innerLine = lines[j];
+      } while (braces > 0 && j < lines.length);
+      const extraLines = lines.slice(i + 1, j).map((l) => l.trim()).join(' ');
+      simDef = `${match[0].trim()} ${extraLines}`.trim();
+      i = j - 1;
+    }
+
+    try {
+      const parseResults = tryParseTestSimDef(simDef);
+      const error = parseResults.find((sim) => sim.error)?.error;
+      if (error) {
+        errors.push({ line: lineNum, message: stripError(error) });
+      } else {
+        sims.push(...parseResults);
+      }
+    } catch (e) {
+      errors.push({ line: lineNum, message: stripError(String(e)) });
+    }
+  }
+  const simsByName = arrayBinned(sims, (sim) => sim.name);
+  return { sims: simsByName, errors, names: Object.keys(simsByName) }
 }

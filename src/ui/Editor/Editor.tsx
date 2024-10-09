@@ -1,11 +1,30 @@
 import React from 'react';
 import MonacoEditor, { DiffEditor, Monaco } from "@monaco-editor/react";
-import { editor } from 'monaco-editor/esm/vs/editor/editor.api';
+import { editor, languages } from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { EditorState, EditorStateSet } from './EditorState';
 
 const langName = 'simDefLang';
 const themeName = 'simDefTheme';
+
+const simRootBaseTokenRules: languages.IMonarchLanguageRule[] = [
+  // The first rule here is for when we're missing closing parens and have hit
+  // the next sim definition; so we just abort!
+  [/^(?=[^@:]+@\s*\d+\s*:)/, { token: 'nextDefinition', next: '@popall' }],
+  [/[ \t]+/, 'whitespace'],
+  [/\(/, { token: 'delimiter.parens', bracket: '@open', next: 'simInner' }],
+  [/\)/, { token: 'delimiter.parens', bracket: '@close', next: '@pop' }],
+  [/@[a-zA-Z]+:/, 'sim.function'],
+  [/=atk[^>]*>/, 'sim.attack'],
+  [/=sav[^>]*>/, 'sim.save'],
+  [/@\w+/, 'sim.userFunction'],
+  [/\$\w+/, 'sim.userVariable'],
+  [/@symbols/, { cases: { '@operators': 'sim.operator' } } ],
+  [/[A-Z]+/, { cases: { '@keywords': 'sim.keyword' } }],
+  [/\d+d\d+/, { token: 'sim.droll' }],
+  [/\d+D\d+/, { token: 'sim.drollCrit' }],
+  [/\d+/, { token: 'sim.number' }],
+];
 
 const onMount = (monaco: Monaco) => {
   monaco.languages.register({ id: langName });
@@ -35,30 +54,25 @@ const onMount = (monaco: Monaco) => {
         //   next: '@simRoot',
         // }],
         // Use this lot below, since group not working...
-        [/^([^@]+)/, 'sim.name'],
+        [/^([^@:]+)/, 'sim.name'],
         [/@/, 'delimiter.nameLevel'],
         [/\d+/, 'sim.level'],
-        [/:/, 'delimiter.simExpression', 'simRoot'],
+        [/:/, { token: 'delimiter.simExpression', next: 'simRoot' }],
       ],
       simRoot: [
-        [/[ \t]+/, 'whitespace'],
-        // Not sure why brackets (match highlighting) doesn't work!
-        // [/[()]/, '@brackets'],
-        // [/\(/, { token: 'delimiter.parens', bracket: '@open' }],
-        // [/\)/, { token: 'delimiter.parens', bracket: '@close' }],
-        [/@[a-zA-Z]+:/, 'sim.function'],
-        [/=atk[^>]*>/, 'sim.attack'],
-        [/=sav[^>]*>/, 'sim.save'],
-        [/@\w+/, 'sim.userFunction'],
-        [/\$\w+/, 'sim.userVariable'],
-        [/@symbols/, { cases: { '@operators': 'sim.operator' } } ],
-        [/[A-Z]+/, { cases: { '@keywords': 'sim.keyword' } }],
-        [/\d+d\d+/, { token: 'sim.droll' }],
-        [/\d+D\d+/, { token: 'sim.drollCrit' }],
-        [/\d+/, { token: 'sim.number' }],
-        [/\n/, { token: 'delimiter.endOfSim', next: '@popall' }],
+        ...simRootBaseTokenRules,
+        [/\n/, { token: 'delimiter.endOfSim', next: '@popall' }], // We're done here!
+      ],
+      simInner: [
+        ...simRootBaseTokenRules,
+        [/\n/, { token: 'delimiter.newLine' }],
       ],
     }
+  });
+  monaco.languages.setLanguageConfiguration(langName, {
+    surroundingPairs: [{ "open": "(", "close": ")" }],
+    autoClosingPairs: [{ "open": "(", "close": ")" }],
+    brackets: [["(", ")"]],
   });
   monaco.editor.defineTheme(themeName, {
     base: 'vs',

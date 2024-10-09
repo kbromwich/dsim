@@ -1,5 +1,6 @@
 import React from 'react';
-import { ParsedSims } from 'ui/useParsedSims';
+
+import { ParsedSims } from 'sim/ParsedSims';
 
 export interface SelectorState {
   search: string;
