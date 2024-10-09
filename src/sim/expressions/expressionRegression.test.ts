@@ -24,6 +24,8 @@ describe('regression', () => {
     expect(testExpr('(@s:=((!$d)=>($d:=6)+$d));2+@s')).toEqual(8);
     expect(testExpr('(@s:=(!$d=>($d:=6)+$d));@s')).toEqual(6);
     expect(testExpr('(@s:=!$d=>($d:=6)+$d);(1=>3+@s)+(1=>2+@s)')).toEqual(11);
+    expect(testExpr('($a1:=1=>3+5;$a2:=1=>3+(!$a1=>6);$a1+$a2)')).toEqual(11);
+    expect(testExpr('($a1:=0=>3+5;$a2:=1=>3+(!$a1=>6);$a1+$a2)')).toEqual(9);
   });
   it('negative is parsed correctly (not parsed as subtract inappropriately)', () => {
     expect(testExpr('1-2')).toEqual(-1);

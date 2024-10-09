@@ -141,6 +141,11 @@ describe('variable', () => {
   it('evaluates to 0 for a variable that has not been stored', () => {
     expect(testExpr('$testName', { varReg: new Map([]) })).toEqual(0);
   });
+  it('supports alphanumeric names', () => {
+    expect(testExpr('$a1', { varReg: new Map([['a1', 3]]) })).toEqual(3);
+    expect(testExpr('$c3', { varReg: new Map([['c3', 8]]) })).toEqual(8);
+    expect(testExpr('$33', { varReg: new Map([['33', 5]]) })).toEqual(5);
+  });
 });
 
 describe('function', () => {

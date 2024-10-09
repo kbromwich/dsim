@@ -1,7 +1,7 @@
 {
   "name": "dsim",
   "version": "0.3.2",
-  "homepage": "https://akronat.github.io/dsim/",
+  "homepage": "https://kbromwich.github.io/dsim/",
   "private": true,
   "scripts": {
     "start": "react-scripts start",

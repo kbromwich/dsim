@@ -52,6 +52,10 @@ const Readme = () => (
         <CodeBlock>{examples.multiLevel}</CodeBlock>
       </p>
       <p>
+        Split up complex expressions over multiple lines with comments by wrapping the expression in parentheses:
+        <CodeBlock>{examples.multiLine}</CodeBlock>
+      </p>
+      <p>
         More complex definitions are also possible:
         <CodeBlock>{examples.advanced}</CodeBlock>
       </p>
@@ -68,7 +72,7 @@ const Readme = () => (
       </>
     ))}
     <Typography variant="h5" sx={{ mt: 4 }}>
-      Operator and Function Expressions:
+      Operator Expressions:
     </Typography>
     {[...UnaryExpressions, ...SplitExpressions].filter((e) => e.description).map((expr) => (
       <>

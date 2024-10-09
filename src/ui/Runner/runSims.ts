@@ -5,7 +5,6 @@ import { createSimParams } from 'sim/SimParams';
 import WorkerPool from 'worker/WorkerPool';
 
 import SimConfig from 'sim/SimConfig';
-import { ParsedSims } from 'ui/useParsedSims';
 import { compressForUrl } from 'util/compression';
 import { tryParseRanges } from 'util/parseRanges';
 import iterationScale from 'util/iterationScale';
@@ -13,6 +12,7 @@ import { AverageDummyAc, AverageSimRun, MutableSimRun } from './SimRun';
 import { RunnerState } from './RunnerState';
 import { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 import parseIntStrict from 'util/parseIntStrict';
+import { ParsedSims } from 'sim/ParsedSims';
 
 const dedupeSims = (runs: MutableSimRun[]): MutableSimRun[] => {
   const unique = new Map<string, MutableSimRun>();
@@ -28,7 +28,12 @@ const dedupeSims = (runs: MutableSimRun[]): MutableSimRun[] => {
   return [...unique.values()];
 };
 
-const runSims = async (sims: ParsedSims, config: SimConfig, selected: Set<string>, setState: (runState: Partial<RunnerState>) => void) => {
+const runSims = async (
+  sims: ParsedSims,
+  config: SimConfig,
+  selected: Set<string>,
+  setState: (runState: Partial<RunnerState>) => void,
+) => {
   const acValues = tryParseRanges(config.acValues) || [];
   const dynamicACs = parseRawDynamicACs(config.dynamicAc);
   const smOffset = parseIntStrict(config.saveModOffset);

@@ -1,4 +1,4 @@
-import { parseSimDef, parseSimExpr } from './parse';
+import { parseSimDef, parseSimDefsScript, parseSimExpr } from './parse';
 
 describe('parseSimExpr', () => {
   it('can parse simple expressions', () => {
@@ -10,19 +10,104 @@ describe('parseSimExpr', () => {
 });
 
 describe('parseSimDef', () => {
+  const testParseSimDef = (simDef: string, errors?: string[]) => {
+    const parsedSims = parseSimDef(simDef);
+    const actualErrors = parsedSims.map((sim) => sim.error).filter((e) => e);
+    expect(actualErrors).toEqual(errors || []);
+  };
   it('can parse simple sim expressions', () => {
-    parseSimDef('test@1: 5');
-    parseSimDef('test@1: 2d20');
-    parseSimDef('test@1: 1d20 + 5');
-  })
+    testParseSimDef('test@1: 5');
+    testParseSimDef('test@1: 2d20');
+    testParseSimDef('test@1: 1d20 + 5');
+  });
   it('can parse moderate sim expressions', () => {
-    parseSimDef('GreatAxe@1: 3+PB =atk> 1D12+3');
-    parseSimDef('GreatSword@1: 3+PB =atk> 2D6+3');
-    parseSimDef('GreatSword with GreatWeaponMaster@1: 3+PB-5 =atk> 2D6+3+10');
-  })
+    testParseSimDef('GreatAxe@1: 3+PB =atk> 1D12+3');
+    testParseSimDef('GreatSword@1: 3+PB =atk> 2D6+3');
+    testParseSimDef('GreatSword with GreatWeaponMaster@1: 3+PB-5 =atk> 2D6+3+10');
+  });
   it('can parse advanced sim expressions', () => {
-    parseSimDef('Dual Wield@5: 2#(4+PB =atk> 1D6+3) + (3+PB =atk> 1D6)');
-    parseSimDef('GreatSword with GreatWeaponFighting@1: 3+PB =atk> CM#(2#(1d6 @rrlte: 2)) + 3');
-    parseSimDef('Dual Wield with a Sneak Attack@1: ($a := (3+PB =atk> 1D6+3 + 1D6)) + (3+PB =atk> 1D6 + ($a<=0 => 1D6)) + $a');
-  })
+    testParseSimDef('Dual Wield@5: 2#(4+PB =atk> 1D6+3) + (3+PB =atk> 1D6)');
+    testParseSimDef('GreatSword with GreatWeaponFighting@1: 3+PB =atk> 2D6rrle2 + 3');
+    testParseSimDef('Dual Wield with a Sneak Attack@1: ($a := (3+PB =atk> 1D6+3 + 1D6)) + (3+PB =atk> 1D6 + ($a<=0 => 1D6)) + $a');
+  });
+});
+
+describe('parseSimDefsScript', () => {
+  it('can parse simple sim expressions', () => {
+    const parsedSims = parseSimDefsScript(`
+      test@1: 5
+      test@2: 2d20
+      test@3: 1d20 + 5
+    `);
+    expect(parsedSims.names).toEqual(['test']);
+    expect(parsedSims.sims.test.length).toEqual(3);
+    expect(parsedSims.errors).toEqual([]);
+  });
+  it('can parse multiline sim expressions', () => {
+    const parsedSims = parseSimDefsScript(`
+      test@1: (
+        3 + PB
+        =atk>
+        1D12 + 3
+        + 1d6
+      )
+      test@2: 2d20
+      test@3: 1d20 + 5
+      test2@1: (
+        4+PB =atk> 1D6+4 
+        + 2+PB =atk> 1D12+2
+      )
+    `);
+    expect(parsedSims.names).toEqual(['test', 'test2']);
+    expect(parsedSims.sims.test.length).toEqual(3);
+    expect(parsedSims.sims.test2.length).toEqual(1);
+    expect(parsedSims.errors).toEqual([]);
+  });
+  it('can parse multiline sim expressions with comments', () => {
+    const parsedSims = parseSimDefsScript(`
+      test@1: (
+        # First attack
+        3 + PB =atk> 1D12 + 3 + 1d6
+        # Second attack
+        3 + PB =atk> 1D6 + 2
+      )
+      dualWieldSneak@1: (
+        # First attack; assign result to $a1
+        $a1 := 3+PB =atk> 1D6+3 + 1D6;
+        # Second attack; only add sneak attack if first attack missed (has a value of 0), then assign result to $a2
+        $a2 := 3+PB =atk> 1D6 + (!$a1 => 1D6);
+        # Return the sum of the two attack results
+        $a1 + $a2
+      )
+    `);
+    expect(parsedSims.errors).toEqual([]);
+    expect(parsedSims.names).toEqual(['test', 'dualWieldSneak']);
+    expect(parsedSims.sims.test.length).toEqual(1);
+    expect(parsedSims.sims.dualWieldSneak.length).toEqual(1);
+  });
+  it('reports unended multiline expressions as errors without clobbering following definitions', () => {
+    const parsedSims = parseSimDefsScript(`
+      test@1: (
+        3+PB =atk> 1D12+3
+        + 1d6
+      
+      test@2: 2d20
+      test@3: 1d20 + 5
+      test2@1: (
+        4+PB =atk> 1D6+4 
+        + 2+PB =atk> 1D12+2
+      )test@3: 1d6 + 2
+      test3@1: (
+        4+PB =atk> 1D6+4 
+      test (4) @ 1 - 3 : 1d6 + 3
+    `);
+    expect(parsedSims.names).toEqual(['test', ')test', 'test (4) ']);
+    expect(parsedSims.sims.test.length).toEqual(2);
+    expect(parsedSims.sims[')test'].length).toEqual(1);
+    expect(parsedSims.errors).toEqual([
+      { line: 2, message: 'Unbalanced parentheses in expression "(3+PB=atk>1D12+3+1d6"' },
+      { line: 8, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4+2+PB=atk>1D12+2"' },
+      { line: 12, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4"' },
+    ]);
+  });
 });
