@@ -70,7 +70,7 @@ const SelectorItem: React.FC<Props> = ({ sims, selected, style, onToggle }) => {
         >
           <Paper elevation={6} sx={{ ml: 16 }}>
             <CodeBlock>{
-              sims.map((s) => s.simDefinition)
+              sims.map((s) => s.source.definition)
                 .filter((s, i, a) => s !== a[i - 1]).join('\n')
             }</CodeBlock>
           </Paper>

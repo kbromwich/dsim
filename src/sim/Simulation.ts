@@ -1,6 +1,13 @@
 import Expression from './expressions/Expression';
 import SimState from './SimState';
 
+export interface SimulationSource {
+  definition: string;
+  rawExpression: string;
+  lineStart?: number;
+  lineCount?: number;
+}
+
 export class BaseSimulation {
   rawExpression: string;
   rootExpression: Expression;
@@ -18,14 +25,14 @@ export class BaseSimulation {
 export default class Simulation extends BaseSimulation {
   name: string;
   level: number;
-  simDefinition: string;
+  source: SimulationSource;
   error?: string;
 
-  constructor(name: string, level: number, simDef: string, rawExpr: string, rootExpr: Expression) {
-    super(rawExpr, rootExpr);
+  constructor(name: string, level: number, source: SimulationSource, rootExpr: Expression) {
+    super(source.rawExpression, rootExpr);
     this.name = name;
     this.level = level;
-    this.simDefinition = simDef;
+    this.source = source;
     this.error = undefined;
   }
   
