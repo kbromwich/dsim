@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/dsim/static/css/main.464b94ee.css",
+    "main.js": "/dsim/static/js/main.5a38c3c2.js",
+    "static/js/264.d7d732e8.chunk.js": "/dsim/static/js/264.d7d732e8.chunk.js",
+    "static/js/641.fa5763cf.chunk.js": "/dsim/static/js/641.fa5763cf.chunk.js",
+    "static/js/91.0d06f26e.chunk.js": "/dsim/static/js/91.0d06f26e.chunk.js",
+    "static/media/codicon.ttf": "/dsim/static/media/codicon.56dba998166ea5a0ca7f.ttf",
+    "index.html": "/dsim/index.html",
+    "main.464b94ee.css.map": "/dsim/static/css/main.464b94ee.css.map",
+    "main.5a38c3c2.js.map": "/dsim/static/js/main.5a38c3c2.js.map",
+    "264.d7d732e8.chunk.js.map": "/dsim/static/js/264.d7d732e8.chunk.js.map",
+    "641.fa5763cf.chunk.js.map": "/dsim/static/js/641.fa5763cf.chunk.js.map",
+    "91.0d06f26e.chunk.js.map": "/dsim/static/js/91.0d06f26e.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.464b94ee.css",
+    "static/js/main.5a38c3c2.js"
+  ]
+}
