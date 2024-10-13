@@ -5,7 +5,7 @@ import { SplitExpressions } from './expressions/splitOperatorExpressions';
 import { UnaryExpressions } from './expressions/unaryOperatorExpressions';
 import { ValueExpressions } from './expressions/valueExpressions';
 import SimState from './SimState';
-import Simulation from './Simulation';
+import Simulation, { SimulationSource } from './Simulation';
 import { arrayBinned } from 'util/arrays';
 import { stripComments, stripCommentsFromLines } from 'util/stripComments';
 import stripError from 'util/stripError';
@@ -74,6 +74,8 @@ function splitExpr(
   return [result.filter(Boolean), opMatch, chunkParensResets];
 }
 
+type Source = Pick<SimulationSource, 'definition' | 'lineStart' | 'lineCount'>;
+
 export function parseSimExpr(rawExpr: string): Expression {
   for (let exprCreator of OperatorExpressions) {
     const [parts, opMatch, parensGroups] = splitExpr(rawExpr, exprCreator)
@@ -95,10 +97,10 @@ export function parseSimExpr(rawExpr: string): Expression {
   throw Error(`Invalid expression: "${rawExpr}"`)
 }
 
-export function parseSimDef(simDef: string): Simulation[] {
-  const [nameLevel, expr] = simDef.trim().split(/:(.*)/);
+export function parseSimDef(source: Source): Simulation[] {
+  const [nameLevel, expr] = source.definition.trim().split(/:(.*)/s);
   if (!expr) {
-    throw new Error(`Simulation definition "${simDef}" is not correctly formatted.`)
+    throw new Error(`Simulation definition "${source.definition}" is not correctly formatted.`)
   }
   let levels = [0];
   let name = nameLevel;
@@ -116,15 +118,19 @@ export function parseSimDef(simDef: string): Simulation[] {
     expression = parseSimExpr('0');
     error = String(e);
   }
+  const simSource: SimulationSource = {
+    ...source,
+    rawExpression: rawExpr,
+  };
   return levels.map((level) => {
-    const sim = new Simulation(name, level, simDef, rawExpr, expression);
+    const sim = new Simulation(name, level, simSource, expression);
     sim.error = error;
     return sim;
   });
 }
 
-export function tryParseTestSimDef(simDef: string): Simulation[] {
-  const sims = parseSimDef(simDef);
+export function tryParseTestSimDef(source: Source): Simulation[] {
+  const sims = parseSimDef(source);
   sims.forEach((sim) => {
     if (!sim.error) {
       try {
@@ -138,8 +144,8 @@ export function tryParseTestSimDef(simDef: string): Simulation[] {
   return sims;
 }
 
-export function parseTestSimDef(simDef: string): Simulation[] {
-  const sims = tryParseTestSimDef(simDef);
+export function parseTestSimDef(source: Source): Simulation[] {
+  const sims = tryParseTestSimDef(source);
   const firstError = sims.find((s) => s.error)?.error;
   if (firstError) {
     throw new Error(firstError);
@@ -152,14 +158,14 @@ export function parseSimDefsScript(simDefsScript: string): ParsedSims {
   const sims: Simulation[] = [];
   const lines = simDefsScript.split('\n');
   for (let i = 0; i < lines.length; i++) {
-    const lineNum = i + 1;
+    const lineStart = i;
     const line = lines[i];
     if (!stripComments(line).trim()) {
       continue;
     }
     const match = SimDefinitionRegex.exec(line);
     if (!match) {
-      errors.push({ line: lineNum, message: `Invalid name@level definition: "${line}"` });
+      errors.push({ lineStart, message: 'Invalid name@level: definition' });
       continue;
     }
 
@@ -169,7 +175,7 @@ export function parseSimDefsScript(simDefsScript: string): ParsedSims {
       let j = i;
       let innerLine = match[1];
       do {
-        if (!stripComments(line).trim()) {
+        if (!line.trim()) {
           continue;
         }
         if (SimDefinitionRegex.test(innerLine)) {
@@ -186,21 +192,22 @@ export function parseSimDefsScript(simDefsScript: string): ParsedSims {
         j += 1;
         innerLine = lines[j];
       } while (braces > 0 && j < lines.length);
-      const extraLines = lines.slice(i + 1, j).map((l) => l.trim()).join(' ');
-      simDef = `${match[0].trim()} ${extraLines}`.trim();
+      const extraLines = lines.slice(i + 1, j).join('\n');
+      simDef = `${match[0].trim()}\n${extraLines}`.trim();
       i = j - 1;
     }
+    const lineCount = 1 + i - lineStart;
 
     try {
-      const parseResults = tryParseTestSimDef(simDef);
+      const parseResults = tryParseTestSimDef({ definition: simDef, lineStart, lineCount });
       const error = parseResults.find((sim) => sim.error)?.error;
       if (error) {
-        errors.push({ line: lineNum, message: stripError(error) });
+        errors.push({ lineStart, lineCount, message: stripError(error) });
       } else {
         sims.push(...parseResults);
       }
     } catch (e) {
-      errors.push({ line: lineNum, message: stripError(String(e)) });
+      errors.push({ lineStart, lineCount, message: stripError(String(e)) });
     }
   }
   const simsByName = arrayBinned(sims, (sim) => sim.name);

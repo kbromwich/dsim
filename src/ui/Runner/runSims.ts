@@ -2,7 +2,7 @@ import throttle from 'lodash.throttle';
 
 import calculateStats from 'sim/Stats';
 import { createSimParams } from 'sim/SimParams';
-import WorkerPool from 'worker/WorkerPool';
+import WorkerPool from 'worker/sim/WorkerPool';
 
 import SimConfig from 'sim/SimConfig';
 import { compressForUrl } from 'util/compression';
@@ -82,7 +82,7 @@ const runSims = async (
   const results = [...runs, ...averages];
   setState({
     compressedSimDefs: compressForUrl([...new Set(
-      runs.map((r) => r.simulation.simDefinition)
+      runs.map((r) => r.simulation.source.definition)
     )].join('\n')),
     results,
   });

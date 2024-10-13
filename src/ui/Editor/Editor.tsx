@@ -3,9 +3,10 @@ import MonacoEditor, { DiffEditor, Monaco } from "@monaco-editor/react";
 import { editor, languages } from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { EditorState, EditorStateSet } from './EditorState';
+import { useParseErrorMarkers } from './useParseErrorMarkers';
 
-const langName = 'simDefLang';
-const themeName = 'simDefTheme';
+const LANG_NAME = 'simDefLang';
+const THEME_NAME = 'simDefTheme';
 
 const simRootBaseTokenRules: languages.IMonarchLanguageRule[] = [
   [/^\s*#.*/, 'comment'],
@@ -28,9 +29,9 @@ const simRootBaseTokenRules: languages.IMonarchLanguageRule[] = [
 ];
 
 const onMount = (monaco: Monaco) => {
-  monaco.languages.register({ id: langName });
+  monaco.languages.register({ id: LANG_NAME });
   // See https://microsoft.github.io/monaco-editor/monarch.html
-  monaco.languages.setMonarchTokensProvider(langName, {
+  monaco.languages.setMonarchTokensProvider(LANG_NAME, {
     includeLF: true,
     brackets: [{ open: '(', close: ')', token: 'delimiter.parens' }],
     keywords: [
@@ -70,12 +71,12 @@ const onMount = (monaco: Monaco) => {
       ],
     }
   });
-  monaco.languages.setLanguageConfiguration(langName, {
+  monaco.languages.setLanguageConfiguration(LANG_NAME, {
     surroundingPairs: [{ "open": "(", "close": ")" }],
     autoClosingPairs: [{ "open": "(", "close": ")" }],
     brackets: [["(", ")"]],
   });
-  monaco.editor.defineTheme(themeName, {
+  monaco.editor.defineTheme(THEME_NAME, {
     base: 'vs',
     inherit: true,
     rules: [
@@ -101,7 +102,7 @@ const onMount = (monaco: Monaco) => {
     ],
     colors: {},
   });
-  monaco.editor.setTheme(themeName);
+  monaco.editor.setTheme(THEME_NAME);
 };
 
 const createEditorHandler = (
@@ -129,6 +130,10 @@ interface Props {
 }
 
 const Editor: React.FC<Props> = ({ sims, editStateSet }) => {
+  const monacoRef = React.useRef<Monaco>();
+  const editorRef = React.useRef<editor.IStandaloneCodeEditor>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Just used to trigger a rerender!
+  const [mounted, setMounted] = React.useState(false);
   const [{ editSims, showEditDiff}] = editStateSet;
   const stateSetRefValue = {
     originalSims: sims,
@@ -137,6 +142,7 @@ const Editor: React.FC<Props> = ({ sims, editStateSet }) => {
   };
   const stateSetRef = React.useRef(stateSetRefValue);
   stateSetRef.current = stateSetRefValue;
+  useParseErrorMarkers(editSims ?? sims, monacoRef, editorRef);
   if (showEditDiff) {
     return (
       <DiffEditor
@@ -144,12 +150,15 @@ const Editor: React.FC<Props> = ({ sims, editStateSet }) => {
         height="100%"
         original={sims}
         modified={editSims ?? sims}
-        language={langName}
-        onMount={(editor, monaco) => {
+        language={LANG_NAME}
+        onMount={(editorInstance, monaco) => {
+          const modEditor = editorInstance.getModifiedEditor();
+          monacoRef.current = monaco;
+          editorRef.current = modEditor;
           onMount(monaco);
-          const modEditor = editor.getModifiedEditor()
           const onChange = createEditorHandler(modEditor, stateSetRef);
           modEditor.onDidChangeModelContent(onChange);
+          setMounted(true);
         }}
       />
     );
@@ -159,11 +168,14 @@ const Editor: React.FC<Props> = ({ sims, editStateSet }) => {
       width="100%"
       height="100%"
       value={editSims ?? sims}
-      language={langName}
-      onMount={(editor, monaco) => {
+      language={LANG_NAME}
+      onMount={(editorInstance, monaco) => {
+        monacoRef.current = monaco;
+        editorRef.current = editorInstance;
         onMount(monaco);
-        const onChange = createEditorHandler(editor, stateSetRef);
-        editor.onDidChangeModelContent(onChange);
+        const onChange = createEditorHandler(editorInstance, stateSetRef);
+        editorInstance.onDidChangeModelContent(onChange);
+        setMounted(true);
       }}
     />
   );

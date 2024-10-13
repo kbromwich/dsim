@@ -11,7 +11,7 @@ describe('parseSimExpr', () => {
 
 describe('parseSimDef', () => {
   const testParseSimDef = (simDef: string, errors?: string[]) => {
-    const parsedSims = parseSimDef(simDef);
+    const parsedSims = parseSimDef({ definition: simDef });
     const actualErrors = parsedSims.map((sim) => sim.error).filter((e) => e);
     expect(actualErrors).toEqual(errors || []);
   };
@@ -105,9 +105,9 @@ describe('parseSimDefsScript', () => {
     expect(parsedSims.sims.test.length).toEqual(2);
     expect(parsedSims.sims[')test'].length).toEqual(1);
     expect(parsedSims.errors).toEqual([
-      { line: 2, message: 'Unbalanced parentheses in expression "(3+PB=atk>1D12+3+1d6"' },
-      { line: 8, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4+2+PB=atk>1D12+2"' },
-      { line: 12, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4"' },
+      { lineStart: 1, lineCount: 4, message: 'Unbalanced parentheses in expression "(3+PB=atk>1D12+3+1d6"' },
+      { lineStart: 7, lineCount: 3, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4+2+PB=atk>1D12+2"' },
+      { lineStart: 11, lineCount: 2, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4"' },
     ]);
   });
 });
