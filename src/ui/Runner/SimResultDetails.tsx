@@ -68,6 +68,9 @@ const SimResultDetails: React.FC<Props> = ({ simResult }) => {
               display: true,
               text: 'Distribution of damage outcomes',
             },
+            legend: {
+              display: false,
+            },
           },
           scales: {
             y: { title: {
