@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import SimConfig from 'sim/SimConfig';
 import iterationScale from 'util/iterationScale';
 import { tryParseRanges } from 'util/parseRanges';
-import DynamicAC, { DynamicACData } from 'sim/DynamicAC';
+import DynamicAC, { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 
 interface Props {
   config: SimConfig;
@@ -25,8 +25,9 @@ const iterLabels = [
 ];
 
 const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
-  const { levels, iterations, workers, acValues, dynamicAc, saveModOffset } = config;
-  const acError = !(dynamicAc || acValues) || !!(acValues && !tryParseRanges(acValues));
+  const { levels, iterations, workers, acValues, dacValues, saveModOffset } = config;
+  const acError = !(dacValues || acValues) || !!(acValues && !tryParseRanges(acValues));
+  const dacs = parseRawDynamicACs(dacValues);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, }}>
       <TextField
@@ -45,23 +46,31 @@ const SimConfiguration: React.FC<Props> = ({ config, onChange }) => {
         size="small"
         title="ACs to simulate. Comma separated, and can be ranges; e.g. &quot;10,12-15,18,20&quot;"
       />
-      <FormControlLabel
-        label="Add Leveled AC: 65% Hit Chance"
-        control={
-          <Checkbox
-            checked={dynamicAc === DynamicAC.SBCTH65}
-            onChange={(_, checked) => {
-              if (dynamicAc.includes(DynamicAC.SBCTH65)) {
-                onChange({ ...config, dynamicAc: '' });
-              } else {
-                onChange({ ...config, dynamicAc: DynamicAC.SBCTH65 });
-              }
-            }}
-            size="small"
-          />
-        }
-        title={DynamicACData[DynamicAC.SBCTH65].description}
-      />
+      {Object.values(DynamicAC).map((dac) => (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={dacValues.includes(dac)}
+              onChange={() => {
+                if (dacValues.includes(dac)) {
+                  onChange({ ...config, dacValues: dacs.filter((d) => d !== dac).join(',') });
+                } else {
+                  onChange({
+                    ...config,
+                    dacValues: Object.values(DynamicAC).filter((d) => {
+                      return dacs.includes(d) || d === dac;
+                    }).join(','),
+                  });
+                }
+              }}
+              size="small"
+            />
+          }
+          key={dac}
+          label={`Dynamic AC: ${DynamicACData[dac].displayName}`}
+          title={DynamicACData[dac].description}
+        />
+      ))}
       <TextField
         error={!tryParseRanges(levels)}
         label="Save Modifier AC Offset"

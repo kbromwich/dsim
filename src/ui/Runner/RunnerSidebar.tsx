@@ -26,7 +26,7 @@ interface Props {
 const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange, runStateSet }) => {
   const [state] = runStateSet;
   const acValues = tryParseRanges(config.acValues) || [];
-  const dacValues = parseRawDynamicACs(config.dynamicAc) || [];
+  const dacValues = parseRawDynamicACs(config.dacValues) || [];
   const smOffset = parseIntStrict(config.saveModOffset);
   const levels = tryParseRanges(config.levels) || [];
   const iterations = config.iterations;

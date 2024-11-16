@@ -45,7 +45,7 @@ export default function App() {
   const lsConf: Partial<SimConfig> = JSON.parse(localStorage.getItem('config') || '{}');
   const [config, setConfigState] = React.useState<SimConfig>({
     acValues: urlAcValues || lsConf.acValues || '12,15,18',
-    dynamicAc: urlDynamicAc || lsConf.dynamicAc || DynamicAC.SBCTH65,
+    dacValues: urlDynamicAc || lsConf.dacValues || DynamicAC.SBCTH65,
     saveModOffset: urlSaveModOffset || lsConf.saveModOffset || '11',
     levels: urlLevels || lsConf.levels || '1-20',
     iterations: lsConf.iterations ?? 3,

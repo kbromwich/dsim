@@ -1,6 +1,6 @@
 interface SimConfig {
   acValues: string;
-  dynamicAc: string;
+  dacValues: string;
   saveModOffset: string;
   iterations: number;
   levels: string;

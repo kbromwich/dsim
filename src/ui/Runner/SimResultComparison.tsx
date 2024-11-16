@@ -36,7 +36,6 @@ interface Props {
 const SimResultComparison: React.FC<Props> = ({ simResults, title }) => {
   const levels = arrayUnique(simResults.map((sim) => sim.simParams.level));
   const resultsByName = arrayBinned(simResults, (r) => r.simulation.name)
-  
   return (
     <Box sx={{ p: 2, width: 600 }}>
       <Line
