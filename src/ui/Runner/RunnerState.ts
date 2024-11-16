@@ -9,9 +9,9 @@ export interface RunnerState {
   results: SimRun[];
   iterations: number;
   acValues: number[];
-  dynamicACs: DynamicAC[];
+  dacValues: DynamicAC[];
   rawAcValues: string;
-  rawDynamicAc: string;
+  rawDacValues: string;
   rawSaveModOffset: string;
   rawLevels: string;
   compressedSimDefs: string;
@@ -27,9 +27,9 @@ export const useRunnerState = (): RunnerStateSet => {
     results: [],
     iterations: 0,
     acValues: [],
-    dynamicACs: [],
+    dacValues: [],
     rawAcValues: '',
-    rawDynamicAc: '',
+    rawDacValues: '',
     rawSaveModOffset: '',
     rawLevels: '',
     compressedSimDefs: '',

@@ -23,7 +23,7 @@ const Runner: React.FC<Props> = ({ runStateSet }) => {
           <Box sx={{ flexGrow: 1 }}>
             <SimResultsTable
               acValues={state.acValues}
-              dynamicACs={state.dynamicACs}
+              dacValues={state.dacValues}
               results={state.results}
               noSort={isRunning}
               showExpressions

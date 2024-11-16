@@ -73,7 +73,7 @@ const RunnerSidebar: React.FC<Props> = ({ sims, selected, config, onConfigChange
         <Typography sx={{ fontStyle: 'italic' }} variant="body2">
           <a href={buildUrl({
             ac: state.rawAcValues,
-            dac: state.rawDynamicAc,
+            dac: state.rawDacValues,
             lvl: state.rawLevels,
             smo: state.rawSaveModOffset,
             sims: state.compressedSimDefs,

@@ -38,7 +38,7 @@ const StyledTable = styled(BaseTable)(() => ({
     borderRight: sepBorder,
   },
   '& .cellStdev': {
-    color: 'rgba(0, 0, 0, 0.65)',
+    color: 'rgba(0, 0, 0, 0.4)',
   },
   '& .levelBreak': {
     borderBottom: '2px solid rgba(224, 224, 224, 1)',
@@ -111,19 +111,19 @@ const getValueColumns = (
 
 interface Props {
   acValues: number[];
-  dynamicACs: DynamicAC[];
+  dacValues: DynamicAC[];
   noSort?: boolean;
   results: SimRun[];
   showExpressions?: boolean;
 }
 
-const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, results, showExpressions }) => {
+const SimResultsTable: React.FC<Props> = ({ acValues, dacValues, noSort, results, showExpressions }) => {
   const [lockLevelSort, setlockLevelSort] = React.useState<boolean>(true);
   const [orderBy, setOrderBy] = React.useState<Order>(DefaultSortOrder);
   const sharedHoverTarget = useHeldSharedState<ResultHoverTarget>();
   const setHoverTarget = useSetSharedState(sharedHoverTarget);
 
-  const showAverage = acValues.length > 1;
+  const showAverage = acValues.length + dacValues.length > 1;
   
   const rows = React.useMemo(() => {
     const order = Object.entries(orderBy);
@@ -203,7 +203,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
       `ac.${ac}`,
       (row) => row.find((sr) => sr.simParams.ac === ac)),
     ).flat(),
-    ...dynamicACs.map((dac) => getValueColumns(
+    ...dacValues.map((dac) => getValueColumns(
       `ac.${dac}`,
       (row) => row.find((sr) => sr.simParams.ac === DynamicACData[dac].calculate(sr.simParams.level))),
     ).flat(),
@@ -221,7 +221,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
     }] as CustomColumnShape[] : []),
   ] as CustomColumnShape[]).map((c) => ({
     className: 'borderedCell', headerClassName: 'borderedCell', ...c,
-  })), [acValues, dynamicACs, showExpressions, showAverage]);
+  })), [acValues, dacValues, showExpressions, showAverage]);
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
@@ -260,7 +260,7 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
                     AC {ac}
                   </GroupCell>
                 )),
-                ...dynamicACs.map((dac) => (
+                ...dacValues.map((dac) => (
                   <GroupCell
                     key={`ac.${dac}`} style={{ width: valueWidth * 2 }}
                     onMouseEnter={(e) => {

@@ -35,9 +35,9 @@ const runSims = async (
   setState: (runState: Partial<RunnerState>) => void,
 ) => {
   const acValues = tryParseRanges(config.acValues) || [];
-  const dynamicACs = parseRawDynamicACs(config.dacValues);
+  const dacValues = parseRawDynamicACs(config.dacValues);
   const smOffset = parseIntStrict(config.saveModOffset);
-  const dacCalcs = dynamicACs.map((dac) => DynamicACData[dac].calculate);
+  const dacCalcs = dacValues.map((dac) => DynamicACData[dac].calculate);
   const levels = tryParseRanges(config.levels) || [];
   const pool = new WorkerPool(config.workers);
   const iterations = iterationScale(config.iterations);
@@ -48,9 +48,9 @@ const runSims = async (
     onStop: () => pool.terminate(),
     iterations,
     acValues,
-    dynamicACs,
+    dacValues,
     rawAcValues: config.acValues,
-    rawDynamicAc: config.dacValues,
+    rawDacValues: config.dacValues,
     rawSaveModOffset: config.saveModOffset,
     rawLevels: config.levels,
   });
