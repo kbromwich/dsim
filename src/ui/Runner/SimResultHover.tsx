@@ -5,8 +5,9 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 
 import { SharedState, useSharedState } from 'util/sharedState';
-import ResultHoverTarget from './ResultHoverTarget';
+import { ResultHoverTarget } from './ResultHoverTarget';
 import SimResultDetails from './SimResultDetails';
+import SimResultComparison from './SimResultComparison';
 
 const NoTouchPopper = styled(Popper)(({ theme }) => ({
   pointerEvents: 'none',
@@ -35,9 +36,14 @@ const SimResultHover: React.FC<Props> = ({ target: targetShare }) => {
       placement='bottom'
       open={show && !!target?.element}
     >
-      {target && target.simResult.finished && target.simResult.stats && (
+      {target && 'simResult' in target && target.simResult.finished && target.simResult.stats && (
         <Paper elevation={6}>
           <SimResultDetails simResult={target.simResult} />
+        </Paper>
+      )}
+      {target && 'simResults' in target && (
+        <Paper elevation={6}>
+          <SimResultComparison simResults={target.simResults} title={target.title} />
         </Paper>
       )}
     </NoTouchPopper>

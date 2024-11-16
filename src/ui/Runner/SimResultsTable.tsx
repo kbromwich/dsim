@@ -16,7 +16,7 @@ import DynamicAC, { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 
 import SimRun, { AverageDummyAc } from './SimRun';
 import { useHeldSharedState, useSetSharedState } from 'util/sharedState';
-import ResultHoverTarget from './ResultHoverTarget';
+import { ResultHoverTarget } from './ResultHoverTarget';
 import SimResultHover from './SimResultHover';
 import SimResultCell from './SimResultCell';
 
@@ -244,9 +244,39 @@ const SimResultsTable: React.FC<Props> = ({ acValues, dynamicACs, noSort, result
                     {lockLevelSort ? <LockIcon sx={{ fontSize: '1rem' }} /> : <LockOpenIcon sx={{ fontSize: "1rem" }} />}
                   </IconButton>
                 </GroupCell>,
-                ...acValues.map((ac) => <GroupCell key={`ac.${ac}`} style={{ width: valueWidth * 2 }}>AC {ac}</GroupCell>),
+                ...acValues.map((ac) => (
+                  <GroupCell
+                    key={`ac.${ac}`} style={{ width: valueWidth * 2 }}
+                    onMouseEnter={(e) => {
+                      const acResults = results.filter((sr) => sr.simParams.ac === ac);
+                      setHoverTarget({
+                        simResults: acResults,
+                        element: e.currentTarget,
+                        title: `AC ${ac}`,
+                      });
+                    }}
+                    onMouseLeave={() => setHoverTarget(undefined)}
+                  >
+                    AC {ac}
+                  </GroupCell>
+                )),
                 ...dynamicACs.map((dac) => (
-                  <GroupCell key={`ac.${dac}`} style={{ width: valueWidth * 2 }} title={DynamicACData[dac].description}>
+                  <GroupCell
+                    key={`ac.${dac}`} style={{ width: valueWidth * 2 }}
+                    onMouseEnter={(e) => {
+                      const acResults = results.filter((sr) => {
+                        const dacAc = DynamicACData[dac].calculate(sr.simParams.level);
+                        return sr.simParams.ac === dacAc;
+                      });
+                      setHoverTarget({
+                        simResults: acResults,
+                        element: e.currentTarget,
+                        title: DynamicACData[dac].displayName,
+                      });
+                    }}
+                    onMouseLeave={() => setHoverTarget(undefined)}
+                    title={DynamicACData[dac].description}
+                  >
                     {DynamicACData[dac].displayName}
                   </GroupCell>
                 )),
