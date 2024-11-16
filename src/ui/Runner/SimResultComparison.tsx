@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
-  Colors,
   Legend,
   LinearScale,
   PointElement,
@@ -20,7 +19,6 @@ import SimRun from './SimRun';
 
 ChartJS.register(
   CategoryScale,
-  Colors,
   Legend,
   LinearScale,
   PointElement,
@@ -28,6 +26,31 @@ ChartJS.register(
   Title,
   Tooltip,
 );
+
+// Colors from https://sashamaps.net/docs/resources/20-colors/
+const COLORS = [
+  '#e6194B', // red
+  '#3cb44b', // green
+  '#ffe119', // yellow
+  '#4363d8', // blue
+  '#f58231', // orange
+  '#911eb4', // purple
+  '#42d4f4', // cyan
+  '#f032e6', // magenta
+  '#bfef45', // lime
+  '#fabed4', // pink
+  '#469990', // teal
+  '#dcbeff', // lavender
+  '#9A6324', // brown
+  '#fffac8', // beige
+  '#800000', // maroon
+  '#aaffc3', // mint
+  '#808000', // olive
+  '#ffd8b1', // apricot
+  '#000075', // navy
+  '#a9a9a9', // grey
+  '#000000', // black
+];
 
 interface Props {
   simResults: SimRun[];
@@ -37,8 +60,17 @@ const SimResultComparison: React.FC<Props> = ({ simResults, title }) => {
   const levels = arrayUnique(simResults.map((sim) => sim.simParams.level));
   const resultsByName = arrayBinned(simResults, (r) => r.simulation.name)
   return (
-    <Box sx={{ p: 2, width: 600 }}>
+    <Box sx={{ p: 2 }}>
       <Line
+        data={{
+          labels: levels,
+          datasets: Object.entries(resultsByName).map(([simName, sims], i) => ({
+            data: levels.map((level) => sims.find((s) => s.simParams.level === level)?.stats?.mean),
+            label: simName,
+            backgroundColor: COLORS[i % COLORS.length],
+            borderColor: COLORS[i % COLORS.length],
+          })),
+        }}
         options={{
           responsive: true,
           plugins: {
@@ -62,13 +94,8 @@ const SimResultComparison: React.FC<Props> = ({ simResults, title }) => {
             } },
           },
         }}
-        data={{
-          labels: levels,
-          datasets: Object.entries(resultsByName).map(([simName, sims]) => ({
-            data: levels.map((level) => sims.find((s) => s.simParams.level === level)?.stats?.mean),
-            label: simName,
-          })),
-        }}
+        width={600}
+        height={500}
       />
     </Box>
   );

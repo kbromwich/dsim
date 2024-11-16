@@ -41,17 +41,17 @@ const SimResultDetails: React.FC<Props> = ({ simResult }) => {
     sortedDist.push([i, dist.getCount(i)]);
   }
   return (
-    <Box sx={{ p: 2, width: 400 }}>
+    <Box sx={{ p: 2, width: 500 }}>
       <Typography fontWeight="bold">{simulation.name}</Typography>
       <CodeBlock sx={{ whiteSpace: 'pre-wrap' }}>{simulation.rawExpression}</CodeBlock>
       <Box sx={{ display: 'flex', gap: 3 }}>
-        <Typography>
+        <Typography sx={{ flex: 1 }}>
           <b>Level:</b> {simParams.level}<br/>
           <b>Armor Class:</b> {simParams.ac}<br/>
           <b>Save Modifier:</b> {simParams.sm}<br/>
           <b>Proficiency Bonus:</b> {simParams.pb}<br/>
         </Typography>
-        <Typography>
+        <Typography sx={{ flex: 1 }}>
           <b>Iterations:</b> {stats.count}<br/>
           <b>Minimum:</b> {stats.min}<br/>
           <b>Mean Average:</b> {stats.mean.toFixed(2)}<br/>
