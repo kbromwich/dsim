@@ -1,3 +1,5 @@
+import { SplitExpression } from 'sim/expressions/splitOperatorExpressions';
+import { ValueExpression } from 'sim/expressions/valueExpressions';
 import SimParams from 'sim/SimParams';
 import Simulation from 'sim/Simulation';
 import calculateStats, { Stats } from 'sim/Stats';
@@ -45,6 +47,36 @@ class SimRun {
 
   protected notifyObservers() {
     this.observers.forEach((obs) => obs(this));
+  }
+
+  dedupeId() {
+    let usedLevel = false;
+    let usedAc = false;
+    let usedPb = false;
+    let usedSm = false;
+    for (let exp of this.simulation.rootExpression.iterateExpression()) {
+      const type = exp.typeName;
+      if (type === ValueExpression.Level) {
+        usedLevel = true;
+      } else if (type === ValueExpression.ArmorClass) {
+        usedAc = true;
+      } else if (type === ValueExpression.ProficiencyBonus) {
+        usedPb = true;
+      } else if (type === ValueExpression.SaveModifier) {
+        usedSm = true;
+      } else if (type === SplitExpression.Attack) {
+        usedAc = true;
+      } else if (type === SplitExpression.Save) {
+        usedSm = true;
+      }
+    }
+    return [
+      usedLevel && `LV${this.simParams.level}`,
+      usedAc && `AC${this.simParams.ac}`,
+      usedPb && `PB${this.simParams.pb}`,
+      usedSm && `SM${this.simParams.sm}`,
+      this.simulation.rawExpression,
+    ].filter((v) => v !== false).join('|');
   }
 }
 

@@ -29,6 +29,10 @@ class Distribution {
     return this.map.get(value) || 0;
   }
 
+  clone() {
+    return new Distribution(this.entries());
+  }
+
   static merge(...dists: Distribution[]) {
     const merged = new Distribution();
     const m = merged.map;

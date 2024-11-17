@@ -20,4 +20,11 @@ export default class Expression<T = unknown> {
   eval(state: SimState): number {
     return this.evalFunc(state, this);
   }
+
+  *iterateExpression(): Generator<Expression> {
+    yield this as Expression;
+    for (const subExpr of this.subExpressions) {
+      yield* subExpr.iterateExpression();
+    }
+  }
 }

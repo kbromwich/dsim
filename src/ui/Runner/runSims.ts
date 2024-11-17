@@ -13,6 +13,7 @@ import { RunnerState } from './RunnerState';
 import { DynamicACData, parseRawDynamicACs } from 'sim/DynamicAC';
 import parseIntStrict from 'util/parseIntStrict';
 import { ParsedSims } from 'sim/ParsedSims';
+import Distribution from 'util/Distribution';
 
 const dedupeSims = (runs: MutableSimRun[]): MutableSimRun[] => {
   const unique = new Map<string, MutableSimRun>();
@@ -87,20 +88,26 @@ const runSims = async (
     results,
   });
 
+  const uniqueSims = new Map<string, Distribution>();
   for (let i = 0; i < runs.length; i += 1) {
     const run = runs[i];
     if (run.error) {
       continue;
     }
     try {
-      const workerConfig = {
-        expression: run.simulation.rawExpression,
-        config: run.simParams,
-      };
-      const onProgress = throttle((max: number, min: number) => {
-        run.setProgress(max, min);
-      }, 30, { leading: true });
-      const dist = await pool.run(workerConfig, iterations, onProgress);
+      const rdid = run.dedupeId();
+      let dist: Distribution | undefined = uniqueSims.get(rdid)?.clone();
+      if (!dist) {
+        const workerConfig = {
+          expression: run.simulation.rawExpression,
+          config: run.simParams,
+        };
+        const onProgress = throttle((max: number, min: number) => {
+          run.setProgress(max, min);
+        }, 30, { leading: true });
+        dist = await pool.run(workerConfig, iterations, onProgress);
+        uniqueSims.set(rdid, dist);
+      }
       run.setToComplete(calculateStats(dist), dist);
     } catch (e) {
       run.error = String(e);

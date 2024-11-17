@@ -5,8 +5,33 @@ import expressionUtils from './expressionUtils';
 
 const { NoPF, sum, roll } = expressionUtils;
 
+export enum SplitExpression {
+  Discard = 'Discard',
+  Assign = 'Assign',
+  AssignAndEvaluate = 'Assign (and Evaluate)',
+  // AssignIfNotAlreadyZero = 'Assign If Not Already Zero',
+  // AssignIfAlreadyNonZero = 'Assign If Already Non-Zero',
+  Check = 'Check',
+  Attack = 'Attack',
+  Save = 'Save',
+  Or = 'Or',
+  And = 'And',
+  GreaterThanOrEqualTo = 'Greater Than Or Equal To',
+  GreaterThan = 'Greater Than',
+  LessThanOrEqualTo = 'Less Than Or Equal To',
+  LessThan = 'Less Than',
+  NotEqualTo = 'Not Equal To',
+  EqualTo = 'Equal To',
+  Add = 'Add',
+  Subtract = 'Subtract',
+  Multiply = 'Multiply',
+  Divide = 'Divide',
+  Repeat = 'Repeat',
+  RerollIfLessThanOrEqualTo = 'Reroll (If Less Than Or Equal To)',
+}
+
 function splitExpr<T>(
-  typeName: string,
+  typeName: SplitExpression,
   sample: string,
   regex: RegExp,
   parseFunc: ParseFunc<T>,
@@ -41,14 +66,14 @@ const parseVantage = (vantage: string, num?: string) => {
 };
 
 export const SplitExpressions = [
-  splitExpr('Discard', ';', /;/, NoPF,
-    (s, ctx) => (void ctx.subExpressions[0].eval(s)) || ctx.subExpressions[1].eval(s),
+  splitExpr(SplitExpression.Discard, ';', /;/, NoPF,
+    (s, ctx) => { ctx.subExpressions[0].eval(s); return ctx.subExpressions[1].eval(s) },
     `The result of the left operand is discarded (though is still evaluated, so \
 variables and functions will be assigned); output is the result of the \
 right operand. Can be useful after assignment when the assigned value should \
 not be immediately added.`
   ),
-  splitExpr('Assign', ':=', /:=/,
+  splitExpr(SplitExpression.Assign, ':=', /:=/,
     (m, exprs) => ({ storedType: checkType(exprs[0], ['Variable', 'Function']) }),
     (s, ctx) => {
       if (ctx.props.storedType === 'Function') {
@@ -87,7 +112,7 @@ Then "@sd" can be inserted anywhere the sneak attack could occur (on any attack 
 hit). Note that this method will mean that the sneak attack always occurs on \
 the first attack that hits.`,
   ),
-  splitExpr('Assign (and Evaluate)', '=', /(?<![=<>!:&|])=(?![=>a-zA-Z])/,
+  splitExpr(SplitExpression.AssignAndEvaluate, '=', /(?<![=<>!:&|])=(?![=>a-zA-Z])/,
     (m, exprs) => ({ storedType: checkType(exprs[0], ['Variable', 'Function']) }),
     (s, ctx) => {
       if (ctx.props.storedType === 'Function') {
@@ -108,7 +133,7 @@ for the output. NOTE this means that any assigned function will be evaluated\
 immediately, and any variables changed as part of the function will be changed \
 when it is immediately evaluated!`,
   ),
-//   splitExpr('Assign If Not Already Zero', '|=', /\|=/,
+//   splitExpr(SplitExpression.Assign If Not Already Zero, '|=', /\|=/,
 //     (m, exprs) => ({ storedType: checkType(exprs[0], ['Variable']) }),
 //     (s, ctx) => {
 //       if (ctx.props.storedType === 'Variable') {
@@ -128,7 +153,7 @@ when it is immediately evaluated!`,
 //       $a |= 2
 //       $a = $a || 2`,
 //   ),
-//   splitExpr('Assign If Already Non-Zero', '&=', /&=/,
+//   splitExpr(SplitExpression.Assign If Already Non-Zero, '&=', /&=/,
 //     (m, exprs) => ({ storedType: checkType(exprs[0], ['Variable']) }),
 //     (s, ctx) => {
 //       if (ctx.props.storedType === 'Variable') {
@@ -148,12 +173,14 @@ when it is immediately evaluated!`,
 //   $a &= 2
 //   $a = $a && 2`,
 //   ),
-  splitExpr('Check', '=>', /=>/, NoPF, (s, ctx) => (ctx.subExpressions[0].eval(s) ? ctx.subExpressions[1].eval(s) : 0),
+  splitExpr(SplitExpression.Check, '=>', /=>/, NoPF, (s, ctx) => {
+    return (ctx.subExpressions[0].eval(s) ? ctx.subExpressions[1].eval(s) : 0);
+  },
     `If left operand is non-zero, then output the right operand, otherwise \
 output 0. For example:
   (1d20 <= 11) => 1d8`
   ),
-  splitExpr('Attack', '=atk>', /=atk(?::(\d+))?(?::(adv|dis)(\d+)?)?>/,
+  splitExpr(SplitExpression.Attack, '=atk>', /=atk(?::(\d+))?(?::(adv|dis)(\d+)?)?>/,
     (m) => ({ critmin: Number(m[1] || 20), vantage: parseVantage(m[2], m[3]) }),
     (state, { props, subExpressions }) => {
       let droll = roll(20);
@@ -199,7 +226,7 @@ Note that if you specify both adv/dis and crit threshold, the crit threshold \
 should come first:
 3+PB =atk:19:dis> 1D6+3`,
   ),
-  splitExpr('Save', '=sav>', /=sav:(\d+)(?::(adv|dis))?>/,
+  splitExpr(SplitExpression.Save, '=sav>', /=sav:(\d+)(?::(adv|dis))?>/,
     (m) => ({ successmod: (Number(m[1] ?? 50) / 100.0), vantage: m[2] }),
     (state, ctx) => {
       let droll = roll(20);
@@ -237,56 +264,56 @@ Note that if you specify both adv/dis and success modifier, the success modifier
 should come first:
   8+3+PB =sav:0:adv> 3d8`,
   ),
-  splitExpr('Or', '||', /\|\|/, NoPF,
+  splitExpr(SplitExpression.Or, '||', /\|\|/, NoPF,
     (s, ctx) => ctx.subExpressions[0].eval(s) || ctx.subExpressions[1].eval(s),
     'Outputs the second operand if the first is 0, otherwise outputs the first operand.',
   ),
-  splitExpr('And', '&&', /&&/, NoPF,
+  splitExpr(SplitExpression.And, '&&', /&&/, NoPF,
     (s, ctx) => ctx.subExpressions[0].eval(s) && ctx.subExpressions[1].eval(s),
     'Outputs the second operand if the first is non-zero, otherwise outputs 0',
   ),
-  splitExpr('Greater Than Or Equal To', '>=', />=/, NoPF,
+  splitExpr(SplitExpression.GreaterThanOrEqualTo, '>=', />=/, NoPF,
     (s, ctx) => Number(ctx.subExpressions[0].eval(s) >= ctx.subExpressions[1].eval(s)),
     'Outputs 1 if the left operand is greater than or equal to the right operand, otherwise 0.',
   ),
-  splitExpr('Greater Than', '>', /(?<!=)>(?!=)/, NoPF,
+  splitExpr(SplitExpression.GreaterThan, '>', /(?<!=)>(?!=)/, NoPF,
     (s, ctx) => Number(ctx.subExpressions[0].eval(s) > ctx.subExpressions[1].eval(s)),
     'Outputs 1 if the left operand is greater than the right operand, otherwise 0.',
   ),
-  splitExpr('Less Than Or Equal To', '<=', /<=/, NoPF,
+  splitExpr(SplitExpression.LessThanOrEqualTo, '<=', /<=/, NoPF,
     (s, ctx) => Number(ctx.subExpressions[0].eval(s) <= ctx.subExpressions[1].eval(s)),
     'Outputs 1 if the left operand is less than or equal to the right operand, otherwise 0.',
   ),
-  splitExpr('Less Than', '<', /(?<!=)<(?!=)/, NoPF,
+  splitExpr(SplitExpression.LessThan, '<', /(?<!=)<(?!=)/, NoPF,
     (s, ctx) => Number(ctx.subExpressions[0].eval(s) < ctx.subExpressions[1].eval(s)),
     'Outputs 1 if the left operand is less than the right operand, otherwise 0.',
   ),
-  splitExpr('Not Equal To', '!=', /!=(?!>)/, NoPF,
+  splitExpr(SplitExpression.NotEqualTo, '!=', /!=(?!>)/, NoPF,
     (s, ctx) => Number(ctx.subExpressions[0].eval(s) !== ctx.subExpressions[1].eval(s)),
     'Outputs 1 if the left operand is not equal to the right operand, otherwise 0.',
   ),
-  splitExpr('Equal To', '==', /==(?!>)/, NoPF,
+  splitExpr(SplitExpression.EqualTo, '==', /==(?!>)/, NoPF,
     (s, ctx) => Number(ctx.subExpressions[0].eval(s) === ctx.subExpressions[1].eval(s)),
     'Outputs 1 if the left operand is equal to the right operand, otherwise 0.',
   ),
-  splitExpr('Add', '+', /\+/, NoPF,
+  splitExpr(SplitExpression.Add, '+', /\+/, NoPF,
     (s, ctx) => sum(ctx.subExpressions.map((e) => e.eval(s))),
     'Outputs the sum of the left operand and right operand',
   ),
-  splitExpr('Subtract', '-', /(?<![-+*/=><|&])-(?!>)/, NoPF,
+  splitExpr(SplitExpression.Subtract, '-', /(?<![-+*/=><|&])-(?!>)/, NoPF,
     (s, ctx) => ctx.subExpressions[0].eval(s) - sum(ctx.subExpressions.slice(1).map((e) => e.eval(s))),
     'Outputs the result of subtracting the right operand from the left operand.',
   ),
-  splitExpr('Multiply', '*', /\*/, NoPF,
+  splitExpr(SplitExpression.Multiply, '*', /\*/, NoPF,
     (s, ctx) => ctx.subExpressions.reduce((a, e) => a * e.eval(s), 1),
     'Outputs the result of multiplying the left operand by the right operand.',
   ),
-  splitExpr('Divide', '/', /\//, NoPF,
+  splitExpr(SplitExpression.Divide, '/', /\//, NoPF,
     (s, ctx) => Math.floor(ctx.subExpressions[0].eval(s) / ctx.subExpressions[1].eval(s)),
     `Outputs the result of dividing the left operand by the right operand. \
 Decimal results are rounded down the nearest whole integer.`,
   ),
-  splitExpr('Repeat', '#', /#/, NoPF, 
+  splitExpr(SplitExpression.Repeat, '#', /#/, NoPF, 
     (s, ctx) => {
       const num = Number(ctx.subExpressions[0].eval(s));
       if (num < 0) {
@@ -298,7 +325,7 @@ Decimal results are rounded down the nearest whole integer.`,
 times equal to the left operand. Left operand must be a positive integer.`,
   ),
   // TODO: Remove this at some point
-  splitExpr('Reroll (If Less Than Or Equal To)', '@rrlte:', /@rrlte:/,
+  splitExpr(SplitExpression.RerollIfLessThanOrEqualTo, '@rrlte:', /@rrlte:/,
     (): {} => { throw new Error('@rrlte: has been removed; use the 2d6rrle2 syntax instead') },
     () => { throw new Error('@rrlte: has been removed; use the 2d6rrle2 syntax instead') },
     '',

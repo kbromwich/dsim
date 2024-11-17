@@ -4,8 +4,21 @@ import expressionUtils from './expressionUtils';
 
 const { NoPF, sum, roll } = expressionUtils;
 
+export enum ValueExpression {
+  Number = 'Number',
+  RollDice = 'Roll Dice',
+  ArmorClass = 'Armor Class',
+  SaveModifier = 'Save Modifier',
+  ProficiencyBonus = 'Proficiency Bonus',
+  Level = 'Level',
+  CriticalMultiplier = 'Critical Multiplier',
+  CriticalBinary = 'Critical Binary',
+  Variable = 'Variable',
+  Function = 'Function',
+}
+
 function valueExpr<T>(
-  typeName: string,
+  typeName: ValueExpression,
   sample: string,
   regex: RegExp,
   parseFunc: ParseFunc<T>,
@@ -35,10 +48,10 @@ const rollOperations: Record<string, RollOp> = {
 const rollOpRegex = Object.keys(rollOperations).join('|');
 
 export const ValueExpressions = [
-  valueExpr('Number', 'X', /^\d+$/, (m) => ({ value: Number(m[0]) }), (s, { props }) => props.value,
+  valueExpr(ValueExpression.Number, 'X', /^\d+$/, (m) => ({ value: Number(m[0]) }), (s, { props }) => props.value,
   'Where X is any positive integer. Outputs the value of the integer.',
   ),
-  valueExpr('Roll Dice', 'XdY', new RegExp(`^(\\d*)([dD])(\\d+)((?:(?:${rollOpRegex})\\d+)*)$`),
+  valueExpr(ValueExpression.RollDice, 'XdY', new RegExp(`^(\\d*)([dD])(\\d+)((?:(?:${rollOpRegex})\\d+)*)$`),
     (m) => {
       return ({
         crittable: m[2] === 'D',
@@ -97,27 +110,27 @@ The available modifier operations (where X is any positive integer) are:
   rreqX: Reroll (only once) any dice that are equal to X
 `
   ),
-  valueExpr('Armor Class', 'AC', /^AC$/, NoPF, (s, ctx) => s.ac,
+  valueExpr(ValueExpression.ArmorClass, 'AC', /^AC$/, NoPF, (s, ctx) => s.ac,
     'Outputs the armor class of the target the simulation is being run against.'
   ),
-  valueExpr('Save Modifier', 'SM', /^SM$/, NoPF, (s, ctx) => s.ac,
+  valueExpr(ValueExpression.SaveModifier, 'SM', /^SM$/, NoPF, (s, ctx) => s.ac,
     'Outputs the save modifier of the target the simulation is being run against.'
   ),
-  valueExpr('Proficiency Bonus', 'PB', /^PB$/, NoPF, (s, ctx) => s.pb,
+  valueExpr(ValueExpression.ProficiencyBonus, 'PB', /^PB$/, NoPF, (s, ctx) => s.pb,
     'Outputs the proficiency bonus for the level of the character build.'
   ),
-  valueExpr('Level', 'LV', /^LV$/, NoPF, (s, ctx) => s.level,
+  valueExpr(ValueExpression.Level, 'LV', /^LV$/, NoPF, (s, ctx) => s.level,
     'Outputs the level of the character build.'
   ),
-  valueExpr('Critical Multiplier', 'CM', /^CM$/, NoPF, (s, ctx) => Number(s.crit()) * 1 + 1,
+  valueExpr(ValueExpression.CriticalMultiplier, 'CM', /^CM$/, NoPF, (s, ctx) => Number(s.crit()) * 1 + 1,
     `Outputs 2 if critical flag is set (in the right operand of an Attack where \
   the attack roll was >= to the critical threshold), otherwise 1.`
   ),
-  valueExpr('Critical Binary', 'CB', /^CB$/, NoPF, (s, ctx) => Number(s.crit()) * 1,
+  valueExpr(ValueExpression.CriticalBinary, 'CB', /^CB$/, NoPF, (s, ctx) => Number(s.crit()) * 1,
     `Outputs 1 if critical flag is set (in the right operand of an Attack where \
 the attack roll was >= to the critical threshold), otherwise 0.`
   ),
-  valueExpr('Variable', '$X', /^\$([a-zA-Z0-9]+)$/,
+  valueExpr(ValueExpression.Variable, '$X', /^\$([a-zA-Z0-9]+)$/,
     (m) => ({ varName: m[1] }),
     (s, ctx) => s.varReg.get(ctx.props.varName) || 0,
     `Where X is a string of alphanumeric characters. A variable that can be \
@@ -129,7 +142,7 @@ This can be useful in cases where you need to know the outcome of an earlier \
 attack, such as whether you've already used your sneak attack for the turn:
   ($a := (3+PB =atk> 1D6+3 + 1D6)) + (3+PB =atk> 1D6 + ($a<=0 => 1D6)) + $a`,
   ),
-  valueExpr('Function', '@X', /^@([a-zA-Z0-9]+)$/,
+  valueExpr(ValueExpression.Function, '@X', /^@([a-zA-Z0-9]+)$/,
     (m) => ({ funcName: m[1] }),
     (s, ctx) => s.funcReg.get(ctx.props.funcName)?.eval(s) || 0,
     `Where X is a string of alphanumeric characters. A function that can be \
