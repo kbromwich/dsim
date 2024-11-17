@@ -426,4 +426,7 @@ describe('repeat', () => {
     expect(testFixedRngExpr([17, 7], '2#1d6')).toEqual(7);
     expect(testFixedRngExpr([4, 20, 14, 7], '2#(5=atk>1D6+2)')).toEqual(8);
   });
+  it('gives a useful error message for negeative repetitions', () => {
+    expect(() => testExpr('-1#3')).toThrow('Cannot repeat a negative (-1) number of times: -1#3');
+  });
 });

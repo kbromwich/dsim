@@ -200,7 +200,7 @@ should come first:
 3+PB =atk:19:dis> 1D6+3`,
   ),
   splitExpr('Save', '=sav>', /=sav:(\d+)(?::(adv|dis))?>/,
-    (m) => ({ successmod: (Number(m[1]) / 100.0) ?? 0.5, vantage: m[2] }),
+    (m) => ({ successmod: (Number(m[1] ?? 50) / 100.0), vantage: m[2] }),
     (state, ctx) => {
       let droll = roll(20);
       if (ctx.props.vantage === 'adv') {
@@ -283,13 +283,19 @@ should come first:
   ),
   splitExpr('Divide', '/', /\//, NoPF,
     (s, ctx) => Math.floor(ctx.subExpressions[0].eval(s) / ctx.subExpressions[1].eval(s)),
-    `Outputs the result of dividing the left operand by the right oeprand. \
+    `Outputs the result of dividing the left operand by the right operand. \
 Decimal results are rounded down the nearest whole integer.`,
   ),
-  splitExpr('Repeat', '#', /#/, NoPF,
-    (s, ctx) => sum([...new Array(Number(ctx.subExpressions[0].eval(s)))].map(() => ctx.subExpressions[1].eval(s))),
+  splitExpr('Repeat', '#', /#/, NoPF, 
+    (s, ctx) => {
+      const num = Number(ctx.subExpressions[0].eval(s));
+      if (num < 0) {
+        throw new Error(`Cannot repeat a negative (${num}) number of times: ${ctx.rawExpression}`);
+      }
+      return sum([...new Array(num)].map(() => ctx.subExpressions[1].eval(s)))
+    },
     `Outputs the sum of repeating evaluation of the right operand a number of \
-times equal to the left operand.`
+times equal to the left operand. Left operand must be a positive integer.`,
   ),
   // TODO: Remove this at some point
   splitExpr('Reroll (If Less Than Or Equal To)', '@rrlte:', /@rrlte:/,

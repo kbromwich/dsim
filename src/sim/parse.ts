@@ -135,7 +135,7 @@ export function tryParseTestSimDef(source: Source): Simulation[] {
     if (!sim.error) {
       try {
         // Perform a test run, to make sure it's all good!
-        sim.run(new SimState({ ac: 10, pb: 2, level: 1, sm: 0 }));
+        sim.run(new SimState({ ac: 10, pb: 2, level: sim.level, sm: 0 }));
       } catch (e) {
         sim.error = String(e);
       }

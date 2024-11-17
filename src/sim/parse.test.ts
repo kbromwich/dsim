@@ -110,4 +110,14 @@ describe('parseSimDefsScript', () => {
       { lineStart: 11, lineCount: 2, message: 'Unbalanced parentheses in expression "(4+PB=atk>1D6+4"' },
     ]);
   });
+  it('correctly parses a repeat operator regression bug', () => {
+    const parsedSims = parseSimDefsScript(`
+      5.5e 2Scim F1/Barb10/RoX Zerk DW (3RA)@12-16:$SB:=5;$RB:=3;$SD:=(LV-10)/2; (
+        @z:=!$z=>($z:= 1;$RB#1D6); @s:=!$s=>($s:= 1;$SD#1D6);
+        @atkbs := $SB+PB =atk> 1D6+$SB+$RB+1D10 + @z + @s;
+        @atk := $SB+PB =atk:adv> 1D6+$SB+$RB + @z + @s;
+        (($z:=0; @atkbs + 2#@atk) + ($z:=0; @atkbs + 3#@atk) + ($z:=0; @atkbs + 3#@atk) + ($z:=1; @atk)) / 3
+      )`);
+      expect(parsedSims.errors).toEqual([]);
+  });
 });
