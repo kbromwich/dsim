@@ -1,20 +1,22 @@
 {
   "files": {
     "main.css": "/dsim/static/css/main.464b94ee.css",
-    "main.js": "/dsim/static/js/main.df352deb.js",
-    "static/js/264.f7b8570b.chunk.js": "/dsim/static/js/264.f7b8570b.chunk.js",
-    "static/js/641.68f64638.chunk.js": "/dsim/static/js/641.68f64638.chunk.js",
-    "static/js/91.c1ce93cc.chunk.js": "/dsim/static/js/91.c1ce93cc.chunk.js",
+    "main.js": "/dsim/static/js/main.fe03fcf9.js",
+    "static/js/264.08fab856.chunk.js": "/dsim/static/js/264.08fab856.chunk.js",
+    "static/js/641.593cd7c0.chunk.js": "/dsim/static/js/641.593cd7c0.chunk.js",
+    "static/js/828.2a738124.chunk.js": "/dsim/static/js/828.2a738124.chunk.js",
+    "static/js/477.5af00d90.chunk.js": "/dsim/static/js/477.5af00d90.chunk.js",
     "static/media/codicon.ttf": "/dsim/static/media/codicon.56dba998166ea5a0ca7f.ttf",
     "index.html": "/dsim/index.html",
     "main.464b94ee.css.map": "/dsim/static/css/main.464b94ee.css.map",
-    "main.df352deb.js.map": "/dsim/static/js/main.df352deb.js.map",
-    "264.f7b8570b.chunk.js.map": "/dsim/static/js/264.f7b8570b.chunk.js.map",
-    "641.68f64638.chunk.js.map": "/dsim/static/js/641.68f64638.chunk.js.map",
-    "91.c1ce93cc.chunk.js.map": "/dsim/static/js/91.c1ce93cc.chunk.js.map"
+    "main.fe03fcf9.js.map": "/dsim/static/js/main.fe03fcf9.js.map",
+    "264.08fab856.chunk.js.map": "/dsim/static/js/264.08fab856.chunk.js.map",
+    "641.593cd7c0.chunk.js.map": "/dsim/static/js/641.593cd7c0.chunk.js.map",
+    "828.2a738124.chunk.js.map": "/dsim/static/js/828.2a738124.chunk.js.map",
+    "477.5af00d90.chunk.js.map": "/dsim/static/js/477.5af00d90.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.464b94ee.css",
-    "static/js/main.df352deb.js"
+    "static/js/main.fe03fcf9.js"
   ]
 }
