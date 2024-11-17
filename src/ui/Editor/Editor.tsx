@@ -16,7 +16,7 @@ const simRootBaseTokenRules: languages.IMonarchLanguageRule[] = [
   [/[ \t]+/, 'whitespace'],
   [/\(/, { token: 'delimiter.parens', bracket: '@open', next: 'simInner' }],
   [/\)/, { token: 'delimiter.parens', bracket: '@close', next: '@pop' }],
-  [/@[a-zA-Z]+:/, 'sim.function'],
+  // [/@[a-zA-Z]+:(?!=)/, 'sim.function'],
   [/=atk[^>]*>/, 'sim.attack'],
   [/=sav[^>]*>/, 'sim.save'],
   [/@\w+/, 'sim.userFunction'],
